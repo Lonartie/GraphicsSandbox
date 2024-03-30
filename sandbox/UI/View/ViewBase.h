@@ -28,7 +28,7 @@ public:
 template<typename T>
 class AutoRegisterView {
 public:
-   [[maybe_unused]] static inline bool registered = []() {
+   static volatile inline bool registered = []() {
       ViewBase::ViewCreator creator = [](QWidget* parent){ return new T(parent); };
       QString name = T::Name;
       ViewBase::getCreators().emplace(name, std::move(creator));

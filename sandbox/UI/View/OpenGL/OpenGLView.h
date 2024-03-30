@@ -1,5 +1,5 @@
 #pragma once
-#include "Common/ViewRegistrar.h"
+#include "UI/View/ViewBase.h"
 #include <QOpenGLWidget>
 
 class OpenGLView : public QOpenGLWidget, public ViewBase {
@@ -12,6 +12,11 @@ public:
    ~OpenGLView() override;
 
    [[nodiscard]] QWidget* asWidget() override;
+
+protected:
+   void initializeGL() override;
+   void resizeGL(int w, int h) override;
+   void paintGL() override;
 
 private:
 };

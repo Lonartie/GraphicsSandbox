@@ -24,7 +24,7 @@ add_executable(sandbox
         UI/View/OpenGL/OpenGLView.h
         Renderer/OpenGL/OpenGLRenderer.cpp
         Renderer/OpenGL/OpenGLRenderer.h
-        Common/ViewRegistrar.h)
+        UI/View/ViewBase.h)
 
 target_link_libraries(sandbox
     PUBLIC
@@ -35,10 +35,18 @@ target_link_libraries(sandbox
         Qt6::OpenGLWidgets
 )
 
-# Adding custom command to run windeployqt on the sandbox executable
+if (APPLE)
+    target_link_libraries(sandbox PRIVATE "-framework OpenGL")
+endif ()
+
+set_target_properties(sandbox PROPERTIES
+        WIN32_EXECUTABLE ON
+        MACOSX_BUNDLE ON
+)
+
 if (WIN32)
     add_custom_command(TARGET sandbox POST_BUILD
-        COMMAND echo "Running windeployqt on $<TARGET_FILE:sandbox>"
-        COMMAND ${WINDEPLOYQT} $<TARGET_FILE:sandbox>
+            COMMAND Qt6::windeployqt
+            ARGS $<TARGET_FILE:sandbox>
     )
-endif()
+endif ()

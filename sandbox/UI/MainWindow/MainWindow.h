@@ -1,7 +1,7 @@
 #pragma once
-#include "Common/ViewRegistrar.h"
 #include "UI/ObjectEditor/ObjectEditor.h"
 #include "UI/SceneBrowser/SceneBrowser.h"
+#include "UI/View/ViewBase.h"
 #include <QMainWindow>
 
 namespace Ui {
