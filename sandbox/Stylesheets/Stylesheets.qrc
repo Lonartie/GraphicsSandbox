@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/styles">
+<!--        <file alias="Advik-B-Dark">Advik-B-DarkStyle.qss</file>-->
+    </qresource>
+</RCC>

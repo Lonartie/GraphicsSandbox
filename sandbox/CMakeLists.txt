@@ -2,7 +2,7 @@ project(sandbox)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
-add_executable(sandbox
+qt_add_executable(sandbox
         main.cpp
         UI/MainWindow/MainWindow.cpp
         UI/MainWindow/MainWindow.h
@@ -35,7 +35,9 @@ add_executable(sandbox
         UI/Components/CameraComponentView/CameraComponentView.ui
         UI/Components/TransformComponentView/TransformComponentView.cpp
         UI/Components/TransformComponentView/TransformComponentView.h
-        UI/Components/TransformComponentView/TransformComponentView.ui)
+        UI/Components/TransformComponentView/TransformComponentView.ui
+        Stylesheets/Stylesheets.qrc
+)
 
 target_link_libraries(sandbox
     PUBLIC

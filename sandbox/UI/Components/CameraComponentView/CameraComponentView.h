@@ -11,6 +11,8 @@ class CameraComponentView : public QWidget, public ComponentsView<CameraComponen
    Q_OBJECT
 
 public:
+   static constexpr auto Order = 1;
+
    explicit CameraComponentView(QWidget* parent = nullptr);
    ~CameraComponentView() override;
 

@@ -11,6 +11,8 @@ class TransformComponentView : public QWidget, public ComponentsView<TransformCo
    Q_OBJECT
 
 public:
+   static constexpr auto Order = 0;
+
    explicit TransformComponentView(QWidget* parent = nullptr);
    ~TransformComponentView() override;
 

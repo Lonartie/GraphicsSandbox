@@ -6,7 +6,7 @@ struct CameraComponent : Component {
    static inline QString Name = "Camera";
    using Component::Component;
 
-   QRectF viewport; // shall be between 0 and 1
+   QRectF viewport = QRectF(0,0,1,1); // shall be between 0 and 1
    float fov = 45.0f;
    float nearClip = 0.1f;
    float farClip = 1000.0f;

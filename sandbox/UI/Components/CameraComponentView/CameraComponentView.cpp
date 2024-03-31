@@ -3,6 +3,8 @@
 
 CameraComponentView::CameraComponentView(QWidget* parent)
     : QWidget(parent), m_ui(new Ui::CameraComponentView) {
+   Q_ASSERT(Registered);
+
    m_ui->setupUi(this);
 
    connect(m_ui->fov, qOverload<double>(&QDoubleSpinBox::valueChanged), this, &CameraComponentView::updateValues);

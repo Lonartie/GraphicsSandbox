@@ -3,7 +3,10 @@
 
 TransformComponentView::TransformComponentView(QWidget* parent)
     : QWidget(parent), m_ui(new Ui::TransformComponentView) {
+   Q_ASSERT(Registered);
+
    m_ui->setupUi(this);
+
    connect(m_ui->posX, qOverload<double>(&QDoubleSpinBox::valueChanged), this, &TransformComponentView::updateValues);
    connect(m_ui->posY, qOverload<double>(&QDoubleSpinBox::valueChanged), this, &TransformComponentView::updateValues);
    connect(m_ui->posZ, qOverload<double>(&QDoubleSpinBox::valueChanged), this, &TransformComponentView::updateValues);

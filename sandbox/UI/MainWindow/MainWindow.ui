@@ -22,7 +22,7 @@
      <x>0</x>
      <y>0</y>
      <width>697</width>
-     <height>22</height>
+     <height>24</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -37,7 +37,13 @@
      <string>Renderer</string>
     </property>
    </widget>
+   <widget class="QMenu" name="styles">
+    <property name="title">
+     <string>Styles</string>
+    </property>
+   </widget>
    <addaction name="menuFile"/>
+   <addaction name="styles"/>
    <addaction name="renderer"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>

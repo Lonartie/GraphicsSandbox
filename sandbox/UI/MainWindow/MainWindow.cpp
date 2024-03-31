@@ -2,6 +2,7 @@
 #include "ui_mainwindow.h"
 #include <QFileDialog>
 #include <QJsonDocument>
+#include <QStyleFactory>
 
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent), m_ui(new Ui::MainWindow) {
@@ -37,6 +38,12 @@ void MainWindow::activateRenderer(const QString& name) {
 }
 
 void MainWindow::buildUI() {
+   for (auto style : QStyleFactory::keys()) {
+      auto* action = new QAction(style, this);
+      connect(action, &QAction::triggered, [style] { QApplication::setStyle(style); });
+      m_ui->styles->addAction(action);
+   }
+
    m_splitter = new QSplitter(Qt::Horizontal);
 
    m_splitter->addWidget(m_sceneBrowser = new SceneBrowser);

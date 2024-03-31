@@ -4,6 +4,7 @@
 #include <QGroupBox>
 #include <QSpacerItem>
 #include <QTimer>
+#include <QMenu>
 
 ObjectEditor::ObjectEditor(QWidget* parent)
     : QWidget(parent), m_ui(new Ui::ObjectEditor) {
@@ -12,7 +13,7 @@ ObjectEditor::ObjectEditor(QWidget* parent)
    connect(m_ui->name, &QLineEdit::textChanged, [this](const QString& text) { m_obj->setName(text); });
    connect(m_ui->name, &QLineEdit::textChanged, this, &ObjectEditor::objectChanged);
 
-   for (auto& [name, _]: ComponentsViewBase::Views())
+   for (auto& name: ComponentsViewBase::SortedNames())
       m_ui->component->addItem(name);
    m_ui->component->setCurrentIndex(0);
    connect(m_ui->addComponent, &QPushButton::clicked, this, &ObjectEditor::addComponent);
@@ -44,15 +45,16 @@ void ObjectEditor::rebuild() {
    if (!m_obj) return;
    m_ui->name->setText(m_obj->name());
    auto views = ComponentsViewBase::Views();
-   for (auto& [name, creator]: views) {
+   for (auto& name : ComponentsViewBase::SortedNames()) {
+      auto creator = views[name];
       if (auto* view = creator(this, m_obj)) {
          auto* group = new QGroupBox(name);
          group->setLayout(new QVBoxLayout);
          auto widget = view->asWidget();
-         widget->installEventFilter(this);
+         group->installEventFilter(this);
          group->layout()->addWidget(widget);
          m_ui->scrollContent->layout()->addWidget(group);
-         m_widgets.push_back(widget);
+         m_widgets.push_back(group);
       }
    }
 
@@ -66,14 +68,36 @@ bool ObjectEditor::eventFilter(QObject* watched, QEvent* event) {
    if (iter == m_widgets.end()) return false;
 
    if (event->type() == QEvent::Resize) {
-      auto* group = qobject_cast<QGroupBox*>(widget->parent());
+      auto* group = qobject_cast<QGroupBox*>(widget);
       auto minWidth = group->minimumSizeHint().width() + 20;
+      // processing this immediately results in errors
+      // because Qt isn't expecting widgets to change here
       QTimer::singleShot(0, this, [this, minWidth] {
          auto lastMinWidth = m_ui->scrollArea->minimumWidth();
          if (lastMinWidth < minWidth) {
             m_ui->scrollArea->setMinimumWidth(minWidth);
          }
       });
+   }
+
+   if (event->type() == QEvent::ContextMenu) {
+      auto* contextMenu = new QMenu(this);
+      auto* removeAction = contextMenu->addAction("Remove");
+      connect(removeAction, &QAction::triggered, [this, widget] {
+         auto iter = std::find(m_widgets.begin(), m_widgets.end(), widget);
+         if (iter != m_widgets.end()) {
+            auto* group = qobject_cast<QGroupBox*>(widget);
+            auto componentName = group->title();
+            // processing this immediately results in errors
+            // because Qt isn't expecting widgets to change here
+            QTimer::singleShot(0, this, [this, componentName] {
+               ComponentsViewBase::RemoveComponent().at(componentName)(m_obj);
+               rebuild();
+               emit objectChanged();
+            });
+         }
+      });
+      contextMenu->exec(QCursor::pos());
    }
 
    return false;
