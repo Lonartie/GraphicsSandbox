@@ -17,6 +17,10 @@ QWidget* OpenGLView::asWidget() {
 }
 
 void OpenGLView::initializeGL() {
+   m_renderer = new OpenGLRenderer(context(), this);
+   m_renderer->initializeOpenGLFunctions();
+   m_renderer->setScene(m_scene);
+
    QOpenGLWidget::initializeGL();
 }
 
@@ -25,7 +29,11 @@ void OpenGLView::resizeGL(int w, int h) {
 }
 
 void OpenGLView::paintGL() {
-   auto f = context()->functions();
-   f->glClearColor(.8f, .8f, .8f, 1.f);
-   f->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+}
+
+void OpenGLView::setScene(sptr<Scene> scene) {
+   m_scene = std::move(scene);
+   if (m_renderer) {
+      m_renderer->setScene(m_scene);
+   }
 }

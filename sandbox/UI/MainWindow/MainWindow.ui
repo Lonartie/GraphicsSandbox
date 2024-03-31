@@ -32,7 +32,13 @@
     <addaction name="loadScene"/>
     <addaction name="saveScene"/>
    </widget>
+   <widget class="QMenu" name="renderer">
+    <property name="title">
+     <string>Renderer</string>
+    </property>
+   </widget>
    <addaction name="menuFile"/>
+   <addaction name="renderer"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="loadScene">

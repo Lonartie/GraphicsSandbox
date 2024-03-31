@@ -11,6 +11,8 @@ add_executable(sandbox
         Model/Hierarchy/Scene.cpp
         Model/Hierarchy/Object.cpp
         Model/Hierarchy/Object.h
+        Model/Components/TransformComponent.h
+        Model/Components/CameraComponent.h
         Model/Components/ComponentsRegistry.h
         Common/Common.h
         Model/Settings/ViewSettings.h
@@ -24,7 +26,9 @@ add_executable(sandbox
         UI/View/OpenGL/OpenGLView.h
         Renderer/OpenGL/OpenGLRenderer.cpp
         Renderer/OpenGL/OpenGLRenderer.h
-        UI/View/ViewBase.h)
+        UI/View/ViewBase.h
+        Model/Components/Component.h
+        Model/Model.h)
 
 target_link_libraries(sandbox
     PUBLIC

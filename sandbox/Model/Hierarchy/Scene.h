@@ -1,11 +1,13 @@
 #pragma once
 
 #include "Common/Common.h"
-#include <QObject>
+#include "Model/Components/TransformComponent.h"
 #include <QJsonObject>
-#include <vector>
+#include <QObject>
 #include <memory>
-#include "Object.h"
+#include <vector>
+
+class Object;
 
 class Scene : public QObject, public std::enable_shared_from_this<Scene> {
    Q_OBJECT
@@ -20,6 +22,8 @@ public:
 
    std::optional<const Object*> findObject(const QString& name) const;
    std::optional<Object*> findObject(const QString& name);
+   std::optional<const Object*> findObject(QUuid id) const;
+   std::optional<Object*> findObject(QUuid id);
 
 signals:
    void objectAdded(const Object& obj);
@@ -31,5 +35,4 @@ private:
 
 private:
    std::vector<uptr<Object>> m_objects;
-
 };

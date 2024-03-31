@@ -1,13 +1,15 @@
 #include "Object.h"
+#include "Model/Components/TransformComponent.h"
 
-uptr<Object> Object::create(const QString& name) {
-   uptr<Object> obj(new Object());
-   obj->setName(name);
+uptr<Object> Object::create() {
+   auto obj = uptr<Object>(new Object());
+   obj->addComponent<TransformComponent>();
    return obj;
 }
 
 uptr<Object> Object::createFromJson(const QJsonObject& json) {
-   uptr<Object> obj(new Object());
+   auto obj = uptr<Object>(new Object());
+   // components will be deserialized later
    obj->m_id = QUuid::fromString(json["id"].toString());
    obj->setName(json["name"].toString());
    return obj;
@@ -18,7 +20,6 @@ QJsonObject Object::toJson() const {
    json["id"] = m_id.toString();
    json["name"] = m_name;
    return json;
-
 }
 
 const QUuid& Object::id() const {
@@ -28,9 +29,14 @@ const QUuid& Object::id() const {
 void Object::setName(const QString& name) {
    if (m_name == name) return;
    m_name = name;
-   emit nameChanged(name);
 }
 
 const QString& Object::name() const {
    return m_name;
+}
+
+Object::~Object() {
+   // remove all components associated with this object
+   for (auto& deletor: GlobalComponentsRegistry::Deletors())
+      deletor(m_id);
 }
