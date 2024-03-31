@@ -15,6 +15,7 @@ public:
 
 signals:
    void objectSelected(Object* object);
+   void sceneChanged();
 
 public slots:
    void setScene(Scene* scene);

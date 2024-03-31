@@ -1,6 +1,7 @@
 #pragma once
 #include "Component.h"
 #include <QRectF>
+#include <QColor>
 
 struct CameraComponent : Component {
    static inline QString Name = "Camera";
@@ -10,6 +11,7 @@ struct CameraComponent : Component {
    float fov = 45.0f;
    float nearClip = 0.1f;
    float farClip = 1000.0f;
+   QColor backgroundColor = QColor(0,0,0);
 
    QJsonObject toJson() const override {
       QJsonObject json;
@@ -17,6 +19,7 @@ struct CameraComponent : Component {
       json["fov"] = fov;
       json["nearClip"] = nearClip;
       json["farClip"] = farClip;
+      json["backgroundColor"] = backgroundColor.name(QColor::NameFormat::HexRgb);
       return json;
    }
 
@@ -26,5 +29,6 @@ struct CameraComponent : Component {
       fov = json["fov"].toDouble();
       nearClip = json["nearClip"].toDouble();
       farClip = json["farClip"].toDouble();
+      backgroundColor = QColor(json["backgroundColor"].toString());
    }
 };

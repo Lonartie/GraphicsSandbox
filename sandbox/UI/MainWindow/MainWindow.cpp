@@ -17,6 +17,7 @@ MainWindow::MainWindow(QWidget* parent)
    connect(m_ui->saveScene, &QAction::triggered, this, &MainWindow::saveScene);
 
    connect(m_sceneBrowser, &SceneBrowser::objectSelected, m_objectEditor, &ObjectEditor::setObject);
+   connect(m_sceneBrowser, &SceneBrowser::sceneChanged, [this] { m_view->asWidget()->repaint(); });
    connect(m_objectEditor, &ObjectEditor::objectChanged, m_sceneBrowser, &SceneBrowser::rebuild);
    connect(m_objectEditor, &ObjectEditor::objectChanged, [this] { m_view->asWidget()->repaint(); });
 }

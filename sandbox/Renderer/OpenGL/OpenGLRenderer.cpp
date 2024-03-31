@@ -19,4 +19,8 @@ void OpenGLRenderer::render() {
 
 void OpenGLRenderer::renderCamera(const CameraComponent& camera) {
    auto& transform = camera.parent().getComponent<TransformComponent>();
+   auto backgroundColor = camera.backgroundColor;
+
+   glClearColor(backgroundColor.redF(), backgroundColor.greenF(), backgroundColor.blueF(), backgroundColor.alphaF());
+   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }

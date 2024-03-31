@@ -1,5 +1,6 @@
 #include "CameraComponentView.h"
 #include "ui_CameraComponentView.h"
+#include <QColorDialog>
 #include <QSlider>
 
 CameraComponentView::CameraComponentView(QWidget* parent)
@@ -15,6 +16,25 @@ CameraComponentView::CameraComponentView(QWidget* parent)
    connect(m_ui->viewportY, qOverload<double>(&QDoubleSpinBox::valueChanged), this, &CameraComponentView::updateValues);
    connect(m_ui->viewportWidth, qOverload<double>(&QDoubleSpinBox::valueChanged), this, &CameraComponentView::updateValues);
    connect(m_ui->viewportHeight, qOverload<double>(&QDoubleSpinBox::valueChanged), this, &CameraComponentView::updateValues);
+   connect(m_ui->colorSelect, &QPushButton::pressed, [this]() {
+      auto& camera = m_obj->getComponent<CameraComponent>();
+      auto colorBefore = camera.backgroundColor;
+      QColorDialog diag(camera.backgroundColor);
+      connect(&diag, &QColorDialog::currentColorChanged, this, [this](const QColor& color) {
+         if (color.isValid()) {
+            auto& camera = m_obj->getComponent<CameraComponent>();
+            camera.backgroundColor = color;
+            m_ui->color->setStyleSheet(QStringLiteral("background-color: %1").arg(color.name(QColor::HexRgb)));
+            emit objectChanged();
+         }
+      });
+      if (diag.exec() == QDialog::Rejected) {
+         auto& camera = m_obj->getComponent<CameraComponent>();
+         camera.backgroundColor = colorBefore;
+         m_ui->color->setStyleSheet(QStringLiteral("background-color: %1").arg(colorBefore.name(QColor::HexRgb)));
+         emit objectChanged();
+      }
+   });
 }
 
 CameraComponentView::~CameraComponentView() {
@@ -67,4 +87,5 @@ void CameraComponentView::init() {
    m_ui->viewportHeight->setValue(camera.viewport.height());
 
    m_ui->fovValue->setText(QString::number(camera.fov) + QStringLiteral("°"));
+   m_ui->color->setStyleSheet(QStringLiteral("background-color: %1").arg(camera.backgroundColor.name(QColor::HexRgb)));
 }

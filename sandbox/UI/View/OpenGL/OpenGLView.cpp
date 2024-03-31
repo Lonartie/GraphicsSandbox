@@ -29,6 +29,7 @@ void OpenGLView::resizeGL(int w, int h) {
 }
 
 void OpenGLView::paintGL() {
+   m_renderer->render();
 }
 
 void OpenGLView::setScene(sptr<Scene> scene) {

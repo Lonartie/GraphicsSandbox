@@ -71,6 +71,7 @@ bool SceneBrowser::eventFilter(QObject* watched, QEvent* event) {
          menu.addAction("Delete", [this, obj] {
             m_scene->removeObject(*obj);
             rebuild();
+            emit sceneChanged();
          });
       }
 
@@ -78,6 +79,7 @@ bool SceneBrowser::eventFilter(QObject* watched, QEvent* event) {
          auto obj = Object::create();
          m_scene->addObject(std::move(obj));
          rebuild();
+         emit sceneChanged();
       });
 
       menu.exec(globalPos);
