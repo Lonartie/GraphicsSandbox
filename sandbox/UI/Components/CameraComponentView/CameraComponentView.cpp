@@ -1,5 +1,6 @@
 #include "CameraComponentView.h"
 #include "ui_CameraComponentView.h"
+#include <QSlider>
 
 CameraComponentView::CameraComponentView(QWidget* parent)
     : QWidget(parent), m_ui(new Ui::CameraComponentView) {
@@ -7,7 +8,7 @@ CameraComponentView::CameraComponentView(QWidget* parent)
 
    m_ui->setupUi(this);
 
-   connect(m_ui->fov, qOverload<double>(&QDoubleSpinBox::valueChanged), this, &CameraComponentView::updateValues);
+   connect(m_ui->fov, qOverload<int>(&QSlider::valueChanged), this, &CameraComponentView::updateValues);
    connect(m_ui->near, qOverload<double>(&QDoubleSpinBox::valueChanged), this, &CameraComponentView::updateValues);
    connect(m_ui->far, qOverload<double>(&QDoubleSpinBox::valueChanged), this, &CameraComponentView::updateValues);
    connect(m_ui->viewportX, qOverload<double>(&QDoubleSpinBox::valueChanged), this, &CameraComponentView::updateValues);
@@ -40,6 +41,8 @@ void CameraComponentView::updateValues() {
    camera.farClip = m_ui->far->value();
    camera.viewport = viewport;
 
+   m_ui->fovValue->setText(QString::number(camera.fov) + QStringLiteral("°"));
+
    emit objectChanged();
 }
 
@@ -62,4 +65,6 @@ void CameraComponentView::init() {
    m_ui->viewportY->setValue(camera.viewport.y());
    m_ui->viewportWidth->setValue(camera.viewport.width());
    m_ui->viewportHeight->setValue(camera.viewport.height());
+
+   m_ui->fovValue->setText(QString::number(camera.fov) + QStringLiteral("°"));
 }
