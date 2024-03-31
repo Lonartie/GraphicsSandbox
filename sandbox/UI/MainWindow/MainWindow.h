@@ -19,6 +19,9 @@ public:
 
 private slots:
    void activateRenderer(const QString& name);
+   void buildUI();
+   void loadScene();
+   void saveScene();
 
 private:
    Ui::MainWindow* m_ui = nullptr;

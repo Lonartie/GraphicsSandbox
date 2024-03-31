@@ -93,3 +93,19 @@ std::optional<Object*> Scene::findObject(QUuid id) {
 
    return std::nullopt;
 }
+
+std::vector<const Object*> Scene::objects() const {
+   std::vector<const Object*> objs;
+   for (const auto& obj: m_objects) {
+      objs.push_back(obj.get());
+   }
+   return objs;
+}
+
+std::vector<Object*> Scene::objects() {
+   std::vector<Object*> objs;
+   for (const auto& obj: m_objects) {
+      objs.push_back(obj.get());
+   }
+   return objs;
+}

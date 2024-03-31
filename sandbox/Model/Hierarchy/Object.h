@@ -58,5 +58,5 @@ void Object::removeComponent() {
 
 template<typename T>
 bool Object::hasComponent() const {
-   return ComponentsRegistry<T>::Components().contains(m_id);
+   return ComponentsRegistry<T>::Components().find(m_id) != ComponentsRegistry<T>::Components().end();
 }

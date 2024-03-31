@@ -25,6 +25,9 @@ public:
    std::optional<const Object*> findObject(QUuid id) const;
    std::optional<Object*> findObject(QUuid id);
 
+   std::vector<const Object*> objects() const;
+   std::vector<Object*> objects();
+
 signals:
    void objectAdded(const Object& obj);
    void objectRemoved(const Object& obj);

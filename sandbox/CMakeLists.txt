@@ -28,7 +28,14 @@ add_executable(sandbox
         Renderer/OpenGL/OpenGLRenderer.h
         UI/View/ViewBase.h
         Model/Components/Component.h
-        Model/Model.h)
+        Model/Model.h
+        UI/Components/ComponentsView.h
+        UI/Components/CameraComponentView/CameraComponentView.cpp
+        UI/Components/CameraComponentView/CameraComponentView.h
+        UI/Components/CameraComponentView/CameraComponentView.ui
+        UI/Components/TransformComponentView/TransformComponentView.cpp
+        UI/Components/TransformComponentView/TransformComponentView.h
+        UI/Components/TransformComponentView/TransformComponentView.ui)
 
 target_link_libraries(sandbox
     PUBLIC
@@ -44,7 +51,7 @@ if (APPLE)
 endif ()
 
 set_target_properties(sandbox PROPERTIES
-        WIN32_EXECUTABLE ON
+#        WIN32_EXECUTABLE ON
         MACOSX_BUNDLE ON
 )
 
