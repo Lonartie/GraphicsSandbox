@@ -23,6 +23,8 @@ protected:
    void resizeGL(int w, int h) override;
    void paintGL() override;
 
+   bool eventFilter(QObject* watched, QEvent* event) override;
+
 private:
    OpenGLRenderer* m_renderer = nullptr;
    sptr<Scene> m_scene = nullptr;
