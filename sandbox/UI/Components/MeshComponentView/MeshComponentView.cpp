@@ -24,6 +24,7 @@ QWidget* MeshComponentView::asWidget() {
 
 void MeshComponentView::init() {
    auto& mesh = m_obj->getComponent<MeshComponent>();
+   m_ui->view->setMesh(&mesh);
 
    for (auto& [name, data]: primitives) {
       if (mesh.vertices == data.first && mesh.indices == data.second) {
@@ -46,5 +47,6 @@ void MeshComponentView::updateValues() {
    }
 
    m_ui->vertexCount->setText(QString::number(mesh.vertices.size()));
+   m_ui->view->setMesh(&mesh);
    emit objectChanged();
 }
