@@ -32,7 +32,6 @@ protected:
 private:
    std::chrono::high_resolution_clock::time_point m_lastTimeNotify;
    std::chrono::high_resolution_clock::time_point m_lastRenderTime;
-   QTimer m_renderTimer;
    OpenGLRenderer* m_renderer = nullptr;
    sptr<Scene> m_scene = nullptr;
 };

@@ -41,6 +41,10 @@ qt_add_executable(sandbox
         UI/Components/MeshComponentView/MeshComponentView.cpp
         UI/Components/MeshComponentView/MeshComponentView.h
         UI/Components/MeshComponentView/MeshComponentView.ui
+        UI/Components/MeshComponentView/MeshOpenGLWidget/MeshOpenGLWidget.cpp
+        UI/Components/MeshComponentView/MeshOpenGLWidget/MeshOpenGLWidget.h
+        Common/ShaderProvider.cpp
+        Common/ShaderProvider.h
 )
 
 target_link_libraries(sandbox
@@ -67,3 +71,12 @@ if (WIN32)
             ARGS $<TARGET_FILE:sandbox>
     )
 endif ()
+
+# folder which shall be copied to the build directory
+set(SHADER_FOLDER ${CMAKE_CURRENT_SOURCE_DIR}/Renderer/OpenGL/Shaders)
+
+add_custom_command(TARGET sandbox POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${SHADER_FOLDER}
+        $<TARGET_FILE_DIR:sandbox>/Shaders
+)
