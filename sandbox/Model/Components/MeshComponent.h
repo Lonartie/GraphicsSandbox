@@ -9,6 +9,10 @@
 struct VertexData {
    QVector3D position;
    QVector2D uv;
+
+   bool operator==(const VertexData& other) const {
+      return std::tie(position, uv) == std::tie(other.position, other.uv);
+   }
 };
 
 struct MeshComponent : Component {
@@ -69,15 +73,8 @@ static std::pair<std::vector<VertexData>, std::vector<uint16_t>> cube_primitive_
       {0, 1, 2, 3, 7, 5, 1, 3, 6, 7, 4, 5, 0, 2, 6, 4, 2, 0, 1, 5, 7, 6, 3, 4}};
 
 static std::pair<std::vector<VertexData>, std::vector<uint16_t>> pyramide_primitive_data = {
-      {{{-1, -1, -1}, {0, 0}},
-       {{-1, -1, 1}, {0, 1}},
-       {{-1, 1, -1}, {1, 0}},
-       {{-1, 1, 1}, {1, 1}},
-       {{1, -1, -1}, {0, 0}},
-       {{1, -1, 1}, {0, 1}},
-       {{1, 1, -1}, {1, 0}},
-       {{1, 1, 1}, {1, 1}}},
-      {0, 1, 2, 3, 7, 5, 1, 3, 6, 7, 4, 5, 0, 2, 6, 4, 2, 0, 1, 5, 7, 6, 3, 4}};
+
+};
 
 static std::unordered_map<QString, std::pair<std::vector<VertexData>, std::vector<uint16_t>>, QtHasher<QString>> primitives = {
       {"cube", cube_primitive_data},

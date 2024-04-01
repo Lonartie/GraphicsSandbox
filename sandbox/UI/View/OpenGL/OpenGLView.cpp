@@ -8,9 +8,12 @@ OpenGLView::OpenGLView(QWidget* parent)
     : QOpenGLWidget(parent) {
    setFocusPolicy(Qt::FocusPolicy::StrongFocus);
    installEventFilter(this);
+   m_renderTimer.setInterval(0);
+   connect(&m_renderTimer, &QTimer::timeout, this, [this] { repaint(); });
 }
 
 OpenGLView::~OpenGLView() {
+   m_renderTimer.stop();
    makeCurrent();
    doneCurrent();
 }
@@ -33,7 +36,24 @@ void OpenGLView::resizeGL(int w, int h) {
 }
 
 void OpenGLView::paintGL() {
+   if (!m_renderTimer.isActive()) {
+      m_renderTimer.start();
+   }
+
+   if (!m_renderer || !isVisible()) {
+      return;
+   }
+
    m_renderer->render();
+
+   const auto now = std::chrono::high_resolution_clock::now();
+   const auto durationMS = std::chrono::duration_cast<std::chrono::microseconds>(now - m_lastRenderTime).count() / 1000.0f;
+   m_lastRenderTime = now;
+
+   if (now - m_lastTimeNotify > std::chrono::milliseconds(500)) {
+      m_lastTimeNotify = now;
+      emit timeChanged(durationMS);
+   }
 }
 
 void OpenGLView::setScene(sptr<Scene> scene) {

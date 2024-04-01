@@ -7,7 +7,7 @@ class ViewBase {
 public:
    virtual ~ViewBase() = default;
 
-   using ViewCreator = std::function<ViewBase*(QWidget*)>;
+   using ViewCreator = std::function<ViewBase*()>;
 
    static std::map<QString, ViewCreator>& getCreators() {
       static std::map<QString, ViewCreator> creators;
@@ -29,7 +29,7 @@ template<typename T>
 class AutoRegisterView {
 public:
    static volatile inline bool registered = []() {
-      ViewBase::ViewCreator creator = [](QWidget* parent){ return new T(parent); };
+      ViewBase::ViewCreator creator = []() { return new T(nullptr); };
       QString name = T::Name;
       ViewBase::getCreators().emplace(name, std::move(creator));
       return true;

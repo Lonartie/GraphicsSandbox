@@ -3,6 +3,7 @@
 #include "Renderer/OpenGL/OpenGLRenderer.h"
 #include "UI/View/ViewBase.h"
 #include <QOpenGLWidget>
+#include <QTimer>
 
 class OpenGLView : public QOpenGLWidget, public ViewBase {
    Q_OBJECT
@@ -15,6 +16,9 @@ public:
 
    [[nodiscard]] QWidget* asWidget() override;
 
+signals:
+   void timeChanged(float time);
+
 public slots:
    void setScene(sptr<Scene> scene);
 
@@ -26,6 +30,9 @@ protected:
    bool eventFilter(QObject* watched, QEvent* event) override;
 
 private:
+   std::chrono::high_resolution_clock::time_point m_lastTimeNotify;
+   std::chrono::high_resolution_clock::time_point m_lastRenderTime;
+   QTimer m_renderTimer;
    OpenGLRenderer* m_renderer = nullptr;
    sptr<Scene> m_scene = nullptr;
 };

@@ -1,4 +1,5 @@
 #include "MainWindow.h"
+#include "UI/View/OpenGL/OpenGLView.h"
 #include "ui_mainwindow.h"
 #include <QFileDialog>
 #include <QJsonDocument>
@@ -17,9 +18,9 @@ MainWindow::MainWindow(QWidget* parent)
    connect(m_ui->saveScene, &QAction::triggered, this, &MainWindow::saveScene);
 
    connect(m_sceneBrowser, &SceneBrowser::objectSelected, m_objectEditor, &ObjectEditor::setObject);
-   connect(m_sceneBrowser, &SceneBrowser::sceneChanged, [this] { m_view->asWidget()->repaint(); });
+//   connect(m_sceneBrowser, &SceneBrowser::sceneChanged, [this] { m_view->asWidget()->repaint(); });
    connect(m_objectEditor, &ObjectEditor::objectChanged, m_sceneBrowser, &SceneBrowser::rebuild);
-   connect(m_objectEditor, &ObjectEditor::objectChanged, [this] { m_view->asWidget()->repaint(); });
+//   connect(m_objectEditor, &ObjectEditor::objectChanged, [this] { m_view->asWidget()->repaint(); });
 }
 
 MainWindow::~MainWindow() {
@@ -28,9 +29,15 @@ MainWindow::~MainWindow() {
 
 void MainWindow::activateRenderer(const QString& name) {
    // change widget
-   m_view = ViewBase::getCreators()[name](nullptr);
+   m_view = ViewBase::getCreators()[name]();
    auto oldWidget = m_splitter->replaceWidget(1, m_view->asWidget());
    delete oldWidget;
+
+   if (auto* openglView = dynamic_cast<OpenGLView*>(m_view)) {
+      connect(openglView, &OpenGLView::timeChanged, [this](float time) {
+         m_ui->statusbar->showMessage(QString("Time: %1 ms FPS: %2").arg(time).arg(1000.0f / time));
+      });
+   }
 
    // set correct action checked, uncheck others
    for (auto action: m_ui->renderer->actions()) {
@@ -48,7 +55,7 @@ void MainWindow::buildUI() {
    m_splitter = new QSplitter(Qt::Horizontal);
 
    m_splitter->addWidget(m_sceneBrowser = new SceneBrowser);
-   m_splitter->addWidget((m_view = ViewBase::getCreators()["OpenGLView"](nullptr))->asWidget());
+   m_splitter->addWidget(new QWidget);
    m_splitter->addWidget(m_objectEditor = new ObjectEditor);
 
    m_splitter->setStyleSheet("QSplitter::handle { background-color: red; }");
@@ -65,8 +72,9 @@ void MainWindow::buildUI() {
    }
 
    setCentralWidget(m_splitter);
-
    m_sceneBrowser->setScene(m_scene.get());
+
+   activateRenderer("OpenGLView");
 }
 
 void MainWindow::loadScene() {
