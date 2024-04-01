@@ -1,10 +1,12 @@
 #pragma once
 #include "Component.h"
-#include <QRectF>
 #include <QColor>
+#include <QRectF>
+#include <array>
 
 struct CameraComponent : Component {
-   static inline QString Name = "Camera";
+   static inline auto Name = u"Camera"_s;
+
    using Component::Component;
 
    QRectF viewport = QRectF(0,0,1,1); // shall be between 0 and 1

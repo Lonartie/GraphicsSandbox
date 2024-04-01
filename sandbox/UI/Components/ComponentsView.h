@@ -9,6 +9,7 @@ public:
    using creator_fn = std::function<ComponentsViewBase*(ObjectEditor*, Object*)>;
    using add_component_fn = std::function<void(Object*)>;
    using remove_component_fn = std::function<void(Object*)>;
+   using dependencies_fn = std::function<std::vector<QString>()>;
    using order_fn = std::function<int()>;
 
    static std::unordered_map<QString, creator_fn, QtHasher<QString>>& Views() {
@@ -19,6 +20,11 @@ public:
    static std::unordered_map<QString, order_fn, QtHasher<QString>>& Order() {
       static std::unordered_map<QString, order_fn, QtHasher<QString>> sOrder;
       return sOrder;
+   }
+
+   static std::unordered_map<QString, dependencies_fn, QtHasher<QString>>& Dependencies() {
+      static std::unordered_map<QString, dependencies_fn, QtHasher<QString>> sDependencies;
+      return sDependencies;
    }
 
    static std::vector<QString> SortedNames() {
@@ -55,6 +61,9 @@ protected:
 template <typename T>
 concept has_order_field = requires  { {T::Order} -> std::convertible_to<int>; };
 
+template <typename T>
+concept has_dependencies = requires  { {T::Dependencies} -> std::convertible_to<std::vector<QString>>; };
+
 template<typename V, typename M>
 struct ComponentsViewRegistrar {
    static bool registerView() {
@@ -66,10 +75,26 @@ struct ComponentsViewRegistrar {
          view->connect(view, &V::objectChanged, parent, &ObjectEditor::objectChanged);
          return view;
       };
+      ComponentsViewBase::dependencies_fn dependencies = []() -> std::vector<QString> {
+         if constexpr (has_dependencies<V>) {
+            return V::Dependencies;
+         } else {
+            return {};
+         }
+      };
       ComponentsViewBase::add_component_fn addComponent = [](Object* obj) {
+         for (auto& deps : ComponentsViewBase::Dependencies()[M::Name]()) {
+            ComponentsViewBase::AddComponent()[deps](obj);
+         }
          obj->addComponent<M>();
       };
       ComponentsViewBase::remove_component_fn removeComponent = [](Object* obj) {
+         for (auto& [name, depsFn] : ComponentsViewBase::Dependencies()) {
+            auto deps = depsFn();
+            if (std::find(deps.begin(), deps.end(), M::Name) != deps.end()) {
+               ComponentsViewBase::RemoveComponent()[name](obj);
+            }
+         }
          obj->removeComponent<M>();
       };
       ComponentsViewBase::order_fn order = []() -> int {
@@ -84,6 +109,7 @@ struct ComponentsViewRegistrar {
       ComponentsViewBase::AddComponent().emplace(name, std::move(addComponent));
       ComponentsViewBase::Order().emplace(name, std::move(order));
       ComponentsViewBase::RemoveComponent().emplace(name, std::move(removeComponent));
+      ComponentsViewBase::Dependencies().emplace(name, std::move(dependencies));
       return true;
    }
 };

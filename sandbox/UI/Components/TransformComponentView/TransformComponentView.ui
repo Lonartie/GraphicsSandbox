@@ -136,6 +136,17 @@
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>posX</tabstop>
+  <tabstop>posY</tabstop>
+  <tabstop>posZ</tabstop>
+  <tabstop>rotX</tabstop>
+  <tabstop>rotY</tabstop>
+  <tabstop>rotZ</tabstop>
+  <tabstop>scaleX</tabstop>
+  <tabstop>scaleY</tabstop>
+  <tabstop>scaleZ</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

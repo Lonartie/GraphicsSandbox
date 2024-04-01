@@ -37,6 +37,7 @@ qt_add_executable(sandbox
         UI/Components/TransformComponentView/TransformComponentView.h
         UI/Components/TransformComponentView/TransformComponentView.ui
         Stylesheets/Stylesheets.qrc
+        Model/Components/MeshComponent.h
 )
 
 target_link_libraries(sandbox

@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>342</width>
-    <height>150</height>
+    <height>156</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -176,6 +176,16 @@
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>viewportX</tabstop>
+  <tabstop>viewportY</tabstop>
+  <tabstop>viewportWidth</tabstop>
+  <tabstop>viewportHeight</tabstop>
+  <tabstop>fov</tabstop>
+  <tabstop>near</tabstop>
+  <tabstop>far</tabstop>
+  <tabstop>colorSelect</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

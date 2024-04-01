@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>322</width>
-    <height>288</height>
+    <height>290</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -41,7 +41,7 @@
         <x>0</x>
         <y>0</y>
         <width>302</width>
-        <height>208</height>
+        <height>210</height>
        </rect>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout"/>
@@ -70,6 +70,12 @@
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>name</tabstop>
+  <tabstop>scrollArea</tabstop>
+  <tabstop>component</tabstop>
+  <tabstop>addComponent</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

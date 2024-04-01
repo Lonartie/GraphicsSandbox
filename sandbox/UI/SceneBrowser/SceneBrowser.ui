@@ -19,6 +19,9 @@
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>list</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

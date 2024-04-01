@@ -2,6 +2,9 @@
 
 #include <memory>
 #include <QHash>
+#include <QString>
+
+using namespace Qt::Literals::StringLiterals;
 
 template <typename T>
 using sptr = std::shared_ptr<T>;
@@ -18,3 +21,14 @@ struct QtHasher {
       return qHash(id);
    }
 };
+
+template<typename T>
+struct is_tuple_t : std::false_type {};
+
+template<typename... Ts>
+struct is_tuple_t<std::tuple<Ts...>> : std::true_type {};
+
+template<typename T>
+concept is_tuple = is_tuple_t<T>::value;
+
+#define REG_ASSERT(X) if (!(X)) { std::exit(666); }
