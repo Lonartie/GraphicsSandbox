@@ -1,8 +1,9 @@
 #version 330 core
 
 out vec4 worldColor;
+uniform vec4 solidColor;
 
 void main() {
     // default color is white
-    worldColor = vec4(1.0, 1.0, 1.0, 1.0);
+    worldColor = solidColor;
 }

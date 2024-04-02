@@ -1,5 +1,6 @@
 #include "OpenGLRenderer.h"
 #include "Model/Components/CameraComponent.h"
+#include "Model/Components/MaterialComponent.h"
 #include "Model/Components/MeshComponent.h"
 
 #include <QSurface>
@@ -17,6 +18,10 @@ void OpenGLRenderer::render() {
    // Draw default background color
    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+   glEnable(GL_DEPTH_TEST); // enables depth testing
+   glEnable(GL_CULL_FACE); // enables face culling to only draw front faces
+   glCullFace(GL_FRONT); // this will only draw the front faces
+   glFrontFace(GL_CW); // this will make the front faces be the ones that are clockwise
 
    if (m_lastStage <= 1) return;
 
@@ -56,7 +61,11 @@ void OpenGLRenderer::renderCamera(const CameraComponent& camera) {
       model.translate(meshTransform.position);
       model.rotate(meshTransform.rotation);
       model.scale(meshTransform.scale);
-      draw(model, view, projection, mesh.vertices, mesh.indices);
+      std::optional<QColor> solidColor;
+      if (mesh.parent().hasComponent<MaterialComponent>()) {
+         solidColor = mesh.parent().getComponent<MaterialComponent>().solidColor;
+      }
+      draw(model, view, projection, mesh.vertices, mesh.indices, solidColor);
    }
 }
 
@@ -124,6 +133,7 @@ void OpenGLRenderer::draw(QMatrix4x4 model, QMatrix4x4 view, QMatrix4x4 projecti
    m_program->setUniformValue("model", model);
    m_program->setUniformValue("view", view);
    m_program->setUniformValue("projection", projection);
+   m_program->setUniformValue("solidColor", solidColor.value_or(QColor(Qt::white)));
 
    m_vertexBuffer->release();
    m_indexBuffer->release();

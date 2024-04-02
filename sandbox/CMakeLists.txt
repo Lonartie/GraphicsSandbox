@@ -46,6 +46,9 @@ qt_add_executable(sandbox
         Common/ShaderProvider.cpp
         Common/ShaderProvider.h
         Model/Components/MaterialComponent.h
+        UI/Components/MaterialComponentView/MaterialComponentView.cpp
+        UI/Components/MaterialComponentView/MaterialComponentView.h
+        UI/Components/MaterialComponentView/MaterialComponentView.ui
 )
 
 target_link_libraries(sandbox

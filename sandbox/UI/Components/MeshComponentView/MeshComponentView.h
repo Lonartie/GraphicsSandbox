@@ -11,7 +11,7 @@ class MeshComponentView : public QWidget, public ComponentsView<MeshComponentVie
    Q_OBJECT
 
 public:
-   static constexpr auto Name = "Mesh";
+   static constexpr auto Order = 1;
    static inline auto Dependencies = {u"Transform"_s};
 
    explicit MeshComponentView(QWidget* parent = nullptr);
