@@ -13,14 +13,17 @@ MainWindow::MainWindow(QWidget* parent)
 
    m_ui->loadScene->setShortcut(QKeySequence::Open);
    connect(m_ui->loadScene, &QAction::triggered, this, &MainWindow::loadScene);
-
    m_ui->saveScene->setShortcut(QKeySequence::Save);
    connect(m_ui->saveScene, &QAction::triggered, this, &MainWindow::saveScene);
+   m_ui->newScene->setShortcut(QKeySequence::New);
+   connect(m_ui->newScene, &QAction::triggered, [this] {
+      m_scene = Scene::createEmpty();
+      m_sceneBrowser->setScene(m_scene.get());
+      m_view->setScene(m_scene.get());
+   });
 
    connect(m_sceneBrowser, &SceneBrowser::objectSelected, m_objectEditor, &ObjectEditor::setObject);
-//   connect(m_sceneBrowser, &SceneBrowser::sceneChanged, [this] { m_view->asWidget()->repaint(); });
    connect(m_objectEditor, &ObjectEditor::objectChanged, m_sceneBrowser, &SceneBrowser::rebuild);
-//   connect(m_objectEditor, &ObjectEditor::objectChanged, [this] { m_view->asWidget()->repaint(); });
 }
 
 MainWindow::~MainWindow() {
@@ -43,6 +46,8 @@ void MainWindow::activateRenderer(const QString& name) {
    for (auto action: m_ui->renderer->actions()) {
       action->setChecked(action->text() == name);
    }
+
+   m_view->setScene(m_scene.get());
 }
 
 void MainWindow::buildUI() {
@@ -90,6 +95,7 @@ void MainWindow::loadScene() {
 
    auto scene = Scene::createFromJson(doc.object());
    m_sceneBrowser->setScene(scene.get());
+   m_view->setScene(scene.get());
    m_scene = std::move(scene);
 }
 

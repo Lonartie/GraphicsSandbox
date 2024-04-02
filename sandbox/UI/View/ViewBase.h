@@ -23,6 +23,7 @@ public:
    }
 
    [[nodiscard]] virtual QWidget* asWidget() = 0;
+   virtual void setScene(Scene* scene) = 0;
 };
 
 template<typename T>

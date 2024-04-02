@@ -58,8 +58,10 @@ void MeshOpenGLWidget::paintGL() {
    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
    glViewport(0, 0, width(), height());
 
-   glEnable(GL_DEPTH_TEST);
-   glEnable(GL_CULL_FACE);
+   glEnable(GL_DEPTH_TEST); // enables depth testing
+   glEnable(GL_CULL_FACE); // enables face culling to only draw front faces
+   glCullFace(GL_FRONT); // this will only draw the front faces
+   glFrontFace(GL_CW); // this will make the front faces be the ones that are clockwise
 
    if (m_mesh == nullptr) return;
 
@@ -87,15 +89,16 @@ void MeshOpenGLWidget::paintGL() {
    m_vbo->release();
    m_vib->release();
 
-   auto projLocation = m_program.uniformLocation("projection");
-   m_program.setUniformValue(projLocation, projection());
+   m_program.setUniformValue("projection", projection());
+   m_program.setUniformValue("model", QMatrix4x4());
+   m_program.setUniformValue("view", QMatrix4x4());
 
    m_program.bind();
    m_vao.bind();
    m_vbo->bind();
    m_vib->bind();
    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-   glDrawElements(GL_TRIANGLE_STRIP, m_mesh->indices.size(), GL_UNSIGNED_SHORT, nullptr);
+   glDrawElements(GL_TRIANGLES, m_mesh->indices.size(), GL_UNSIGNED_SHORT, nullptr);
    //   m_vao.release();
    //   m_vbo->release();
    //   m_vib->release();
@@ -109,10 +112,12 @@ void MeshOpenGLWidget::setMesh(MeshComponent* mesh) {
 QMatrix4x4 MeshOpenGLWidget::projection() const {
    QMatrix4x4 mat;
    mat.setToIdentity();
-   mat.perspective(45.0f * m_zoom, float(width()) / float(height()), 0.1f, 100.0f);
+   mat.perspective(75.0f, float(width()) / float(height()), 0.1f, 100.0f);
+
+   QVector3D pos(0, 0, -5 * (1 / m_zoom));
 
    QMatrix4x4 proj;
-   proj.translate(0, 0, -5);
+   proj.translate(pos);
    proj.rotate(QQuaternion::fromEulerAngles(m_rotation));
 
    return mat * proj;

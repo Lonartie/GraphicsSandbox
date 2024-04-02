@@ -31,6 +31,7 @@
     </property>
     <addaction name="loadScene"/>
     <addaction name="saveScene"/>
+    <addaction name="newScene"/>
    </widget>
    <widget class="QMenu" name="renderer">
     <property name="title">
@@ -55,6 +56,11 @@
   <action name="saveScene">
    <property name="text">
     <string>Save Scene</string>
+   </property>
+  </action>
+  <action name="newScene">
+   <property name="text">
+    <string>New Scene</string>
    </property>
   </action>
  </widget>

@@ -77,8 +77,16 @@ bool SceneBrowser::eventFilter(QObject* watched, QEvent* event) {
 
       menu.addAction("Add", [this] {
          auto obj = Object::create();
+         auto objID = obj->id();
          m_scene->addObject(std::move(obj));
          rebuild();
+         for (int i = 0; i < m_ui->list->count(); ++i) {
+            auto item = m_ui->list->item(i);
+            if (item->data(Qt::UserRole).value<Object*>()->id() == objID) {
+               item->setSelected(true);
+               break;
+            }
+         }
          emit sceneChanged();
       });
 

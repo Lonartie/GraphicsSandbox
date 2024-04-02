@@ -20,7 +20,7 @@ signals:
    void timeChanged(float time);
 
 public slots:
-   void setScene(sptr<Scene> scene);
+   void setScene(Scene* scene) override;
 
 protected:
    void initializeGL() override;
@@ -33,5 +33,5 @@ private:
    std::chrono::high_resolution_clock::time_point m_lastTimeNotify;
    std::chrono::high_resolution_clock::time_point m_lastRenderTime;
    OpenGLRenderer* m_renderer = nullptr;
-   sptr<Scene> m_scene = nullptr;
+   Scene* m_scene = nullptr;
 };

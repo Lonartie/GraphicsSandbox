@@ -45,6 +45,7 @@ qt_add_executable(sandbox
         UI/Components/MeshComponentView/MeshOpenGLWidget/MeshOpenGLWidget.h
         Common/ShaderProvider.cpp
         Common/ShaderProvider.h
+        Model/Components/MaterialComponent.h
 )
 
 target_link_libraries(sandbox

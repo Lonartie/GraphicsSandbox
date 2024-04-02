@@ -21,7 +21,7 @@ QWidget* OpenGLView::asWidget() {
 
 void OpenGLView::initializeGL() {
    m_renderer = new OpenGLRenderer(context(), this);
-   m_renderer->initializeOpenGLFunctions();
+   m_renderer->init();
    m_renderer->setScene(m_scene);
 
    QOpenGLWidget::initializeGL();
@@ -48,7 +48,7 @@ void OpenGLView::paintGL() {
    update();
 }
 
-void OpenGLView::setScene(sptr<Scene> scene) {
+void OpenGLView::setScene(Scene* scene) {
    m_scene = std::move(scene);
    if (m_renderer) {
       m_renderer->setScene(m_scene);
