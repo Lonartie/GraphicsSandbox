@@ -13,6 +13,7 @@ struct CameraComponent : Component {
    float fov = 45.0f;
    float nearClip = 0.1f;
    float farClip = 1000.0f;
+   bool wireframe = false;
    QColor backgroundColor = QColor(0,0,0);
 
    QJsonObject toJson() const override {
@@ -22,6 +23,7 @@ struct CameraComponent : Component {
       json["nearClip"] = nearClip;
       json["farClip"] = farClip;
       json["backgroundColor"] = backgroundColor.name(QColor::NameFormat::HexRgb);
+      json["wireframe"] = wireframe;
       return json;
    }
 
@@ -32,5 +34,6 @@ struct CameraComponent : Component {
       nearClip = json["nearClip"].toDouble();
       farClip = json["farClip"].toDouble();
       backgroundColor = QColor(json["backgroundColor"].toString());
+      wireframe = json["wireframe"].toBool();
    }
 };

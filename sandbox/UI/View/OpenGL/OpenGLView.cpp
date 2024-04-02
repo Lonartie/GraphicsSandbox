@@ -6,6 +6,9 @@
 
 OpenGLView::OpenGLView(QWidget* parent)
     : QOpenGLWidget(parent) {
+   auto format = QSurfaceFormat::defaultFormat();
+   format.setSamples(4);
+   setFormat(format);
    setFocusPolicy(Qt::FocusPolicy::StrongFocus);
    installEventFilter(this);
 }

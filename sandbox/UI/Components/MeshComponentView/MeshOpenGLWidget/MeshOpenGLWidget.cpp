@@ -10,6 +10,7 @@ MeshOpenGLWidget::MeshOpenGLWidget(QWidget* parent)
    fmt.setRenderableType(QSurfaceFormat::OpenGL);
    fmt.setVersion(4, 0);
    fmt.setProfile(QSurfaceFormat::CoreProfile);
+   fmt.setSamples(4);
    setFormat(fmt);
 
    setMouseTracking(true);

@@ -16,6 +16,7 @@ CameraComponentView::CameraComponentView(QWidget* parent)
    connect(m_ui->viewportY, qOverload<double>(&QDoubleSpinBox::valueChanged), this, &CameraComponentView::updateValues);
    connect(m_ui->viewportWidth, qOverload<double>(&QDoubleSpinBox::valueChanged), this, &CameraComponentView::updateValues);
    connect(m_ui->viewportHeight, qOverload<double>(&QDoubleSpinBox::valueChanged), this, &CameraComponentView::updateValues);
+   connect(m_ui->wireframe, &QCheckBox::stateChanged, this, &CameraComponentView::updateValues);
    connect(m_ui->colorSelect, &QPushButton::pressed, [this]() {
       auto& camera = m_obj->getComponent<CameraComponent>();
       auto colorBefore = camera.backgroundColor;
@@ -60,6 +61,7 @@ void CameraComponentView::updateValues() {
    camera.nearClip = m_ui->near->value();
    camera.farClip = m_ui->far->value();
    camera.viewport = viewport;
+   camera.wireframe = m_ui->wireframe->isChecked();
 
    m_ui->fovValue->setText(QString::number(camera.fov) + QStringLiteral("°"));
 
@@ -75,6 +77,8 @@ void CameraComponentView::init() {
          QSignalBlocker(m_ui->viewportX),
          QSignalBlocker(m_ui->viewportY),
          QSignalBlocker(m_ui->viewportWidth),
+         QSignalBlocker(m_ui->viewportHeight),
+         QSignalBlocker(m_ui->wireframe),
    };
    auto& camera = m_obj->getComponent<CameraComponent>();
 
@@ -85,6 +89,7 @@ void CameraComponentView::init() {
    m_ui->viewportY->setValue(camera.viewport.y());
    m_ui->viewportWidth->setValue(camera.viewport.width());
    m_ui->viewportHeight->setValue(camera.viewport.height());
+   m_ui->wireframe->setChecked(camera.wireframe);
 
    m_ui->fovValue->setText(QString::number(camera.fov) + QStringLiteral("°"));
    m_ui->color->setStyleSheet(QStringLiteral("background-color: %1").arg(camera.backgroundColor.name(QColor::HexRgb)));

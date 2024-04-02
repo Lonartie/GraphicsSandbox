@@ -6,8 +6,8 @@
 #include <QSurface>
 #include <utility>
 
-OpenGLRenderer::OpenGLRenderer(QOpenGLContext* context, QObject* parent)
-    : QObject(parent), QOpenGLFunctions(context) {
+OpenGLRenderer::OpenGLRenderer(QOpenGLContext*, QObject* parent)
+    : QObject(parent), QOpenGLFunctions_4_0_Core() {
 }
 
 void OpenGLRenderer::setScene(Scene* scene) {
@@ -18,10 +18,6 @@ void OpenGLRenderer::render() {
    // Draw default background color
    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-   glEnable(GL_DEPTH_TEST); // enables depth testing
-   glEnable(GL_CULL_FACE); // enables face culling to only draw front faces
-   glCullFace(GL_FRONT); // this will only draw the front faces
-   glFrontFace(GL_CW); // this will make the front faces be the ones that are clockwise
 
    if (m_lastStage <= 1) return;
 
@@ -45,13 +41,20 @@ void OpenGLRenderer::renderCamera(const CameraComponent& camera) {
    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
    glDisable(GL_SCISSOR_TEST);
 
+   if (camera.wireframe) {
+      glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+   } else {
+      glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+   }
+
    if (m_lastStage <= 2) return;
 
    QMatrix4x4 projection;
    projection.perspective(camera.fov, float(viewport.width()) / float(viewport.height()), camera.nearClip, camera.farClip);
    QMatrix4x4 view;
-   view.translate(transform.position);
+   view.translate(0,0,0);
    view.rotate(transform.rotation);
+   view.translate(transform.position);
 
    // Draw scene
    glViewport(viewport.x(), viewport.y(), viewport.width(), viewport.height());
@@ -85,6 +88,12 @@ void OpenGLRenderer::setLastStage(int stage) {
 
 void OpenGLRenderer::init() {
    initializeOpenGLFunctions();
+
+   glEnable(GL_MULTISAMPLE);
+   glEnable(GL_DEPTH_TEST); // enables depth testing
+   glEnable(GL_CULL_FACE); // enables face culling to only draw front faces
+   glCullFace(GL_FRONT); // this will only draw the front faces
+   glFrontFace(GL_CW); // this will make the front faces be the ones that are clockwise
 
    m_vao = new QOpenGLVertexArrayObject();
    m_vao->create();

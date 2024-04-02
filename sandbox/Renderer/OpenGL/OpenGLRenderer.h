@@ -4,11 +4,11 @@
 #include "Model/Hierarchy/Scene.h"
 #include <QObject>
 #include <QOpenGLBuffer>
-#include <QOpenGLFunctions>
+#include <QOpenGLFunctions_4_0_Core>
 #include <QOpenGLShaderProgram>
 #include <QOpenGLVertexArrayObject>
 
-class OpenGLRenderer : public QObject, public QOpenGLFunctions {
+class OpenGLRenderer : public QObject, public QOpenGLFunctions_4_0_Core {
    Q_OBJECT
 
 public:
