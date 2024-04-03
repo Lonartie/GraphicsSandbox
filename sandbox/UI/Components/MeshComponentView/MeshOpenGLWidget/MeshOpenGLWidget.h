@@ -29,7 +29,7 @@ private:
 
 private:
    MeshComponent* m_mesh = nullptr;
-   QVector3D m_rotation;
+   QQuaternion m_rotation;
    QPoint m_lastMousePos;
    bool m_rotating = false;
    float m_zoom = 1.0;

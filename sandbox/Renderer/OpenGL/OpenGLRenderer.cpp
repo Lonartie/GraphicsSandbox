@@ -6,94 +6,29 @@
 #include <QSurface>
 #include <utility>
 
-OpenGLRenderer::OpenGLRenderer(QOpenGLContext*, QObject* parent)
-    : QObject(parent), QOpenGLFunctions_4_0_Core() {
+OpenGLRenderer::OpenGLRenderer(QOpenGLContext*)
+    : QObject(nullptr), QOpenGLFunctions_4_0_Core() {
+}
+
+OpenGLRenderer::~OpenGLRenderer() {
+   delete m_vao;
+   delete m_vertexBuffer;
+   delete m_indexBuffer;
+   delete m_program;
 }
 
 void OpenGLRenderer::setScene(Scene* scene) {
    m_scene = scene;
 }
 
-void OpenGLRenderer::render() {
-   // Draw default background color
-   glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-   if (m_lastStage <= 1) return;
-
-   for (auto& [_, comp] : ComponentsRegistry<CameraComponent>::Components()) {
-      renderCamera(comp);
-   }
-}
-
-void OpenGLRenderer::renderCamera(const CameraComponent& camera) {
-   auto& transform = camera.parent().getComponent<TransformComponent>();
-   auto backgroundColor = camera.backgroundColor;
-
-   // Draw background color
-   QRect viewport(camera.viewport.x() * m_width,
-              camera.viewport.y() * m_height,
-              camera.viewport.width() * m_width,
-              camera.viewport.height() * m_height);
-   glEnable(GL_SCISSOR_TEST);
-   glScissor(viewport.x(), viewport.y(), viewport.width(), viewport.height());
-   glClearColor(backgroundColor.redF(), backgroundColor.greenF(), backgroundColor.blueF(), backgroundColor.alphaF());
-   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-   glDisable(GL_SCISSOR_TEST);
-
-   if (camera.wireframe) {
-      glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-   } else {
-      glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-   }
-
-   if (m_lastStage <= 2) return;
-
-   QMatrix4x4 projection;
-   projection.perspective(camera.fov, float(viewport.width()) / float(viewport.height()), camera.nearClip, camera.farClip);
-   QMatrix4x4 view;
-   view.translate(0,0,0);
-   view.rotate(transform.rotation);
-   view.translate(transform.position);
-
-   // Draw scene
-   glViewport(viewport.x(), viewport.y(), viewport.width(), viewport.height());
-   for (auto& [_, mesh]: ComponentsRegistry<MeshComponent>::Components()) {
-      auto& meshTransform = mesh.parent().getComponent<TransformComponent>();
-      QMatrix4x4 model;
-      model.translate(meshTransform.position);
-      model.rotate(meshTransform.rotation);
-      model.scale(meshTransform.scale);
-      std::optional<QColor> solidColor;
-      if (mesh.parent().hasComponent<MaterialComponent>()) {
-         solidColor = mesh.parent().getComponent<MaterialComponent>().solidColor;
-      }
-      draw(model, view, projection, mesh.vertices, mesh.indices, solidColor);
-   }
-}
-
-void OpenGLRenderer::resize(int w, int h) {
-   m_width = w;
-   m_height = h;
-}
-
-void OpenGLRenderer::resetLastStage() {
-   setLastStage(std::numeric_limits<int>::max());
-}
-
-void OpenGLRenderer::setLastStage(int stage) {
-   qDebug() << "Set last stage: " << stage;
-   m_lastStage = stage;
-}
-
 void OpenGLRenderer::init() {
    initializeOpenGLFunctions();
 
    glEnable(GL_MULTISAMPLE);
-   glEnable(GL_DEPTH_TEST); // enables depth testing
+   glEnable(GL_DEPTH_TEST);// enables depth testing
    glEnable(GL_CULL_FACE); // enables face culling to only draw front faces
-   glCullFace(GL_FRONT); // this will only draw the front faces
-   glFrontFace(GL_CW); // this will make the front faces be the ones that are clockwise
+   glCullFace(GL_FRONT);   // this will only draw the front faces
+   glFrontFace(GL_CW);     // this will make the front faces be the ones that are clockwise
 
    m_vao = new QOpenGLVertexArrayObject();
    m_vao->create();
@@ -123,6 +58,90 @@ void OpenGLRenderer::init() {
    m_vertexBuffer->release();
    m_indexBuffer->release();
    m_program->release();
+}
+
+void OpenGLRenderer::render() {
+   // Draw default background color
+   glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+   if (m_lastStage <= 1) return;
+
+   if (m_editorCam && m_editorTrans) {
+      renderCamera(*m_editorCam, *m_editorTrans);
+   } else {
+      for (auto& [_, comp]: ComponentsRegistry<CameraComponent>::Components()) {
+         renderCamera(comp, comp.parent().getComponent<TransformComponent>());
+      }
+   }
+}
+
+void OpenGLRenderer::renderCamera(const CameraComponent& camera, const TransformComponent& transform) {
+   auto backgroundColor = camera.backgroundColor;
+
+   // Draw background color
+   QRect viewport(camera.viewport.x() * m_width,
+                  camera.viewport.y() * m_height,
+                  camera.viewport.width() * m_width,
+                  camera.viewport.height() * m_height);
+   glEnable(GL_SCISSOR_TEST);
+   glScissor(viewport.x(), viewport.y(), viewport.width(), viewport.height());
+   glClearColor(backgroundColor.redF(), backgroundColor.greenF(), backgroundColor.blueF(), backgroundColor.alphaF());
+   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+   glDisable(GL_SCISSOR_TEST);
+
+   if (camera.wireframe) {
+      glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+   } else {
+      glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+   }
+
+   if (m_lastStage <= 2) return;
+
+   QMatrix4x4 projection;
+   projection.perspective(camera.fov, float(viewport.width()) / float(viewport.height()), camera.nearClip, camera.farClip);
+
+   QMatrix4x4 view;
+
+   if (m_editorCam && m_editorTrans) {
+      // editor camera should rotate around the global y axis but the local x axis
+      view.translate(0, 0, 0);
+      view.rotate(transform.rotation);
+      view.translate(-transform.position);
+   } else {
+      view.translate(0, 0, 0);
+      view.rotate(transform.rotation);
+      view.translate(transform.position);
+   }
+
+   // Draw scene
+   glViewport(viewport.x(), viewport.y(), viewport.width(), viewport.height());
+   for (auto& [_, mesh]: ComponentsRegistry<MeshComponent>::Components()) {
+      auto& meshTransform = mesh.parent().getComponent<TransformComponent>();
+      QMatrix4x4 model;
+      model.translate(meshTransform.position);
+      model.rotate(meshTransform.rotation);
+      model.scale(meshTransform.scale);
+      std::optional<QColor> solidColor;
+      if (mesh.parent().hasComponent<MaterialComponent>()) {
+         solidColor = mesh.parent().getComponent<MaterialComponent>().solidColor;
+      }
+      draw(model, view, projection, mesh.vertices, mesh.indices, solidColor);
+   }
+}
+
+void OpenGLRenderer::resize(int w, int h) {
+   m_width = w;
+   m_height = h;
+}
+
+void OpenGLRenderer::resetLastStage() {
+   setLastStage(std::numeric_limits<int>::max());
+}
+
+void OpenGLRenderer::setLastStage(int stage) {
+   qDebug() << "Set last stage: " << stage;
+   m_lastStage = stage;
 }
 
 void OpenGLRenderer::draw(QMatrix4x4 model, QMatrix4x4 view, QMatrix4x4 projection,
@@ -158,4 +177,20 @@ void OpenGLRenderer::draw(QMatrix4x4 model, QMatrix4x4 view, QMatrix4x4 projecti
    m_vao->release();
    m_vertexBuffer->release();
    m_indexBuffer->release();
+}
+
+const std::optional<CameraComponent>& OpenGLRenderer::editorCam() const {
+   return m_editorCam;
+}
+
+void OpenGLRenderer::setEditorCam(const std::optional<CameraComponent>& editorCam) {
+   m_editorCam = editorCam;
+}
+
+const std::optional<TransformComponent>& OpenGLRenderer::editorTrans() const {
+   return m_editorTrans;
+}
+
+void OpenGLRenderer::setEditorTrans(const std::optional<TransformComponent>& editorTrans) {
+   m_editorTrans = editorTrans;
 }

@@ -7,7 +7,6 @@
 
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent), m_ui(new Ui::MainWindow) {
-
    m_ui->setupUi(this);
    buildUI();
 
@@ -24,6 +23,14 @@ MainWindow::MainWindow(QWidget* parent)
 
    connect(m_sceneBrowser, &SceneBrowser::objectSelected, m_objectEditor, &ObjectEditor::setObject);
    connect(m_objectEditor, &ObjectEditor::objectChanged, m_sceneBrowser, &SceneBrowser::rebuild);
+
+   if (QFile::exists("test/test.scene")) {
+      QFile file("test/test.scene");
+      file.open(QIODevice::ReadOnly);
+      m_scene = Scene::createFromJson(QJsonDocument::fromJson(file.readAll()).object());
+      m_sceneBrowser->setScene(m_scene.get());
+      m_view->setScene(m_scene.get());
+   }
 }
 
 MainWindow::~MainWindow() {

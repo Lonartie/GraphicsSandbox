@@ -4,6 +4,7 @@
 #include "UI/View/ViewBase.h"
 #include <QOpenGLWidget>
 #include <QTimer>
+#include <QVector2D>
 
 class OpenGLView : public QOpenGLWidget, public ViewBase {
    Q_OBJECT
@@ -30,8 +31,18 @@ protected:
    bool eventFilter(QObject* watched, QEvent* event) override;
 
 private:
+   void enableEditorCam(bool enable);
+   bool editorEnabled() const;
+
+private:
    std::chrono::high_resolution_clock::time_point m_lastTimeNotify;
    std::chrono::high_resolution_clock::time_point m_lastRenderTime;
    OpenGLRenderer* m_renderer = nullptr;
    Scene* m_scene = nullptr;
+   bool m_editorCamRotating = false;
+   QVector2D m_movement;
+   QPoint m_lastMousePos;
+   QTimer m_movementTimer;
+   CameraComponent m_editorCam = CameraComponent(nullptr);
+   TransformComponent m_editorTrans = TransformComponent(nullptr);
 };

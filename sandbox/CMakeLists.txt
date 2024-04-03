@@ -52,7 +52,7 @@ qt_add_executable(sandbox
 )
 
 target_link_libraries(sandbox
-    PUBLIC
+        PUBLIC
         Qt6::Core
         Qt6::Gui
         Qt6::Widgets
@@ -65,7 +65,7 @@ if (APPLE)
 endif ()
 
 set_target_properties(sandbox PROPERTIES
-#        WIN32_EXECUTABLE ON
+        #        WIN32_EXECUTABLE ON
         MACOSX_BUNDLE ON
 )
 
@@ -78,9 +78,10 @@ endif ()
 
 # folder which shall be copied to the build directory
 set(SHADER_FOLDER ${CMAKE_CURRENT_SOURCE_DIR}/Renderer/OpenGL/Shaders)
-
 add_custom_command(TARGET sandbox POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_directory
-        ${SHADER_FOLDER}
-        $<TARGET_FILE_DIR:sandbox>/Shaders
+        COMMAND ${CMAKE_COMMAND} -E copy_directory ${SHADER_FOLDER} $<TARGET_FILE_DIR:sandbox>/Shaders
+)
+set(TEST_FOLDER ${CMAKE_CURRENT_SOURCE_DIR}/../test)
+add_custom_command(TARGET sandbox POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory ${TEST_FOLDER} $<TARGET_FILE_DIR:sandbox>/test
 )

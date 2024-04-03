@@ -10,6 +10,7 @@ struct Component {
    Component& operator=(const Component& other) noexcept = default;
    Component& operator=(Component&& other) noexcept = default;
 
+   bool standalone() const { return m_parent == nullptr; }
    const Object& parent() const { return *m_parent; }
    Object& parent() { return *m_parent; }
 

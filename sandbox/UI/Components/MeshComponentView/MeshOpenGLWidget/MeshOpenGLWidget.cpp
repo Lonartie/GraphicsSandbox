@@ -93,6 +93,7 @@ void MeshOpenGLWidget::paintGL() {
    m_program.setUniformValue("projection", projection());
    m_program.setUniformValue("model", QMatrix4x4());
    m_program.setUniformValue("view", QMatrix4x4());
+   m_program.setUniformValue("solidColor", QColor(Qt::white));
 
    m_program.bind();
    m_vao.bind();
@@ -111,17 +112,20 @@ void MeshOpenGLWidget::setMesh(MeshComponent* mesh) {
 }
 
 QMatrix4x4 MeshOpenGLWidget::projection() const {
-   QMatrix4x4 mat;
-   mat.setToIdentity();
-   mat.perspective(75.0f, float(width()) / float(height()), 0.1f, 100.0f);
+   QMatrix4x4 projection;
+   projection.setToIdentity();
+   projection.perspective(75.0f, float(width()) / float(height()), 0.1f, 100.0f);
 
-   QVector3D pos(0, 0, -5 * (1 / m_zoom));
+   QMatrix4x4 camera;
+//   camera.translate(0,0,0);
+//   camera.rotate(QQuaternion::fromEulerAngles(m_rotation));
+   camera.translate(0, 0, -5 * (1 / m_zoom));
 
-   QMatrix4x4 proj;
-   proj.translate(pos);
-   proj.rotate(QQuaternion::fromEulerAngles(m_rotation));
+   QMatrix4x4 mesh;
+   mesh.translate(0,0,0);
+   mesh.rotate(m_rotation);
 
-   return mat * proj;
+   return projection * camera * mesh;
 }
 
 bool MeshOpenGLWidget::eventFilter(QObject* watched, QEvent* event) {
@@ -143,7 +147,7 @@ bool MeshOpenGLWidget::eventFilter(QObject* watched, QEvent* event) {
    if (event->type() == QEvent::MouseMove && m_rotating) {
       auto mouseEvent = static_cast<QMouseEvent*>(event);
       auto diff = mouseEvent->pos() - m_lastMousePos;
-      m_rotation += QVector3D(diff.y(), diff.x(), 0);
+      m_rotation = QQuaternion::fromEulerAngles(QVector3D(diff.y(), diff.x(), 0)) * m_rotation;
       m_lastMousePos = mouseEvent->pos();
       update();
    }
