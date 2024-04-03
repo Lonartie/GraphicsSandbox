@@ -57,7 +57,7 @@ void MeshOpenGLWidget::paintGL() {
    // 1. Clear screen black
    glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-   glViewport(0, 0, width(), height());
+   glViewport(0, 0, width() * devicePixelRatio(), height() * devicePixelRatio());
 
    glEnable(GL_DEPTH_TEST); // enables depth testing
    glEnable(GL_CULL_FACE); // enables face culling to only draw front faces

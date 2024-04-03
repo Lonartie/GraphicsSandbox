@@ -31,7 +31,8 @@ void OpenGLView::initializeGL() {
 }
 
 void OpenGLView::resizeGL(int w, int h) {
-   m_renderer->resize(w, h);
+   auto scalingFactor = devicePixelRatio();
+   m_renderer->resize(w * scalingFactor, h * scalingFactor);
    QOpenGLWidget::resizeGL(w, h);
 }
 
