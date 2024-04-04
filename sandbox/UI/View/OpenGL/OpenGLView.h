@@ -40,7 +40,10 @@ private:
    OpenGLRenderer* m_renderer = nullptr;
    Scene* m_scene = nullptr;
    bool m_editorCamRotating = false;
-   QVector2D m_movement;
+   float m_speed = .2f;
+   float m_mouseSpeed = .2f;
+   QVector3D m_movement;
+   QVector2D m_rotation;
    QPoint m_lastMousePos;
    QTimer m_movementTimer;
    CameraComponent m_editorCam = CameraComponent(nullptr);

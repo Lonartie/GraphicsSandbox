@@ -102,17 +102,9 @@ void OpenGLRenderer::renderCamera(const CameraComponent& camera, const Transform
    projection.perspective(camera.fov, float(viewport.width()) / float(viewport.height()), camera.nearClip, camera.farClip);
 
    QMatrix4x4 view;
-
-   if (m_editorCam && m_editorTrans) {
-      // editor camera should rotate around the global y axis but the local x axis
-      view.translate(0, 0, 0);
-      view.rotate(transform.rotation);
-      view.translate(-transform.position);
-   } else {
-      view.translate(0, 0, 0);
-      view.rotate(transform.rotation);
-      view.translate(transform.position);
-   }
+   view.translate(0, 0, 0);
+   view.rotate(transform.rotation);
+   view.translate(transform.position);
 
    // Draw scene
    glViewport(viewport.x(), viewport.y(), viewport.width(), viewport.height());

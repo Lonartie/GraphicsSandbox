@@ -1,6 +1,7 @@
 #include "OpenGLView.h"
 #include <QKeyEvent>
 #include <QOpenGLFunctions>
+#include <QApplication>
 
 [[maybe_unused]] static auto OpenGLViewReg = AutoRegisterView<OpenGLView>::registered;
 
@@ -11,11 +12,14 @@ OpenGLView::OpenGLView(QWidget* parent)
    setFormat(format);
    setFocusPolicy(Qt::FocusPolicy::StrongFocus);
    installEventFilter(this);
-   m_movementTimer.setInterval(16);
+   m_movementTimer.setInterval(1);
    m_movementTimer.start();
    connect(&m_movementTimer, &QTimer::timeout, this, [this] {
       if (editorEnabled()) {
-         m_editorTrans.position += QVector3D(m_movement.x(), 0, m_movement.y());
+         const auto direction = m_movement.normalized();
+         const auto globalVector = direction * m_speed;
+         const auto localVector = m_editorTrans.rotation.conjugated().rotatedVector(globalVector);
+         m_editorTrans.position -= localVector;
          m_renderer->setEditorTrans(m_editorTrans);
       }
    });
@@ -62,7 +66,7 @@ void OpenGLView::paintGL() {
 }
 
 void OpenGLView::setScene(Scene* scene) {
-   m_scene = std::move(scene);
+   m_scene = scene;
    if (m_renderer) {
       m_renderer->setScene(m_scene);
    }
@@ -70,7 +74,7 @@ void OpenGLView::setScene(Scene* scene) {
 bool OpenGLView::eventFilter(QObject* watched, QEvent* ev) {
 
    if (ev->type() == QEvent::KeyPress) {
-      auto event = static_cast<QKeyEvent*>(ev);
+      auto event = dynamic_cast<QKeyEvent*>(ev);
       auto key = event->key();
       switch (key) {
          case Qt::Key_0:
@@ -121,49 +125,78 @@ bool OpenGLView::eventFilter(QObject* watched, QEvent* ev) {
          if (event->button() == Qt::MouseButton::RightButton) {
             m_editorCamRotating = true;
             m_lastMousePos = event->pos();
+            setCursor(Qt::BlankCursor);
          }
       } else if (ev->type() == QEvent::MouseButtonRelease) {
          auto event = dynamic_cast<QMouseEvent*>(ev);
          if (event->button() == Qt::MouseButton::RightButton) {
             m_editorCamRotating = false;
+            unsetCursor();
          }
       } else if (ev->type() == QEvent::MouseMove && m_editorCamRotating) {
          auto event = dynamic_cast<QMouseEvent*>(ev);
          if (m_editorCamRotating) {
             auto delta = event->pos() - m_lastMousePos;
-            auto euler = m_editorTrans.rotation.toEulerAngles();
-            euler += QVector3D(delta.y(), delta.x(), 0);
-            m_editorTrans.rotation = QQuaternion::fromEulerAngles(euler);
-            m_lastMousePos = event->pos();
+            m_rotation += QVector2D(delta.y(), delta.x()) * m_mouseSpeed;
+//            m_lastMousePos = event->pos();
+            auto rotationX = QQuaternion::fromEulerAngles(QVector3D(m_rotation.x(), 0, 0));
+            auto rotationY = QQuaternion::fromEulerAngles(QVector3D(0, m_rotation.y(), 0));
+            // apply y rotation first, then x rotation
+            m_editorTrans.rotation = rotationX * rotationY;
             m_renderer->setEditorTrans(m_editorTrans);
+            QCursor::setPos(mapToGlobal(m_lastMousePos));
          }
       }
 
       // handle wasd
-      auto speed = 0.1f;
       if (ev->type() == QEvent::KeyPress) {
          auto event = dynamic_cast<QKeyEvent*>(ev);
          auto key = event->key();
          if (key == Qt::Key_W) {
-            m_movement += QVector2D(0, -speed);
+            m_movement += QVector3D(0, 0, -1);
          } else if (key == Qt::Key_S) {
-            m_movement += QVector2D(0, speed);
+            m_movement += QVector3D(0, 0, 1);
          } else if (key == Qt::Key_A) {
-            m_movement += QVector2D(-speed, 0);
+            m_movement += QVector3D(-1, 0, 0);
          } else if (key == Qt::Key_D) {
-            m_movement += QVector2D(speed, 0);
+            m_movement += QVector3D(1, 0, 0);
+         } else if (key == Qt::Key_Space) {
+            m_movement += QVector3D(0, 1, 0);
+         } else if (key == Qt::Key_Control) {
+            m_movement += QVector3D(0, -1, 0);
+         }
+
+         if (key == Qt::Key_Shift) {
+            m_speed = 1.f;
+         }
+         if (key == Qt::Key_Alt) {
+            m_speed = .01f;
          }
       } else if (ev->type() == QEvent::KeyRelease) {
          auto event = dynamic_cast<QKeyEvent*>(ev);
          auto key = event->key();
          if (key == Qt::Key_W) {
-            m_movement -= QVector2D(0, -speed);
+            m_movement -= QVector3D(0, 0, -1);
          } else if (key == Qt::Key_S) {
-            m_movement -= QVector2D(0, speed);
+            m_movement -= QVector3D(0, 0, 1);
          } else if (key == Qt::Key_A) {
-            m_movement -= QVector2D(-speed, 0);
+            m_movement -= QVector3D(-1, 0, 0);
          } else if (key == Qt::Key_D) {
-            m_movement -= QVector2D(speed, 0);
+            m_movement -= QVector3D(1, 0, 0);
+         } else if (key == Qt::Key_Space) {
+            m_movement -= QVector3D(0, 1, 0);
+         } else if (key == Qt::Key_Control) {
+            m_movement -= QVector3D(0, -1, 0);
+         }
+
+         if (key == Qt::Key_Shift || key == Qt::Key_Alt) {
+            m_speed = .2f;
+         }
+
+         // if something is stuck, reset with esc
+         if (key == Qt::Key_Escape) {
+            m_speed = .2f;
+            m_movement = {};
          }
       }
    }

@@ -25,9 +25,6 @@ private slots:
 
 private:
    Ui::MainWindow* m_ui = nullptr;
-   SceneBrowser* m_sceneBrowser = nullptr;
-   ObjectEditor* m_objectEditor = nullptr;
    ViewBase* m_view = nullptr;
-   QSplitter* m_splitter = nullptr;
    uptr<Scene> m_scene = Scene::createEmpty();
 };
