@@ -55,8 +55,11 @@ void MainWindow::activateRenderer(const QString& name) {
    m_ui->tabs->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 
    if (auto* openglView = dynamic_cast<OpenGLView*>(m_view)) {
-      connect(openglView, &OpenGLView::timeChanged, [this](float time) {
-         m_ui->statusbar->showMessage(QString("Time: %1 ms FPS: %2").arg(time).arg(1000.0f / time));
+      connect(openglView, &OpenGLView::timeChanged, [this](float time, float renderTime) {
+         m_ui->statusbar->showMessage(QString("Time: %1 ms FPS: %2 (Raw Render: %3 ms)")
+                                            .arg(QString::number(time, 'g', 3))
+                                            .arg(1000.0f / time)
+                                            .arg(QString::number(renderTime, 'g', 3)));
       });
    }
 

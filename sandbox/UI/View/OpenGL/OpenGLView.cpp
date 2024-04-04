@@ -50,15 +50,16 @@ void OpenGLView::resizeGL(int w, int h) {
 }
 
 void OpenGLView::paintGL() {
+   const auto before = std::chrono::high_resolution_clock::now();
    m_renderer->render();
-
    const auto now = std::chrono::high_resolution_clock::now();
    const auto durationMS = std::chrono::duration_cast<std::chrono::microseconds>(now - m_lastRenderTime).count() / 1000.0f;
    m_lastRenderTime = now;
 
    if (now - m_lastTimeNotify > std::chrono::milliseconds(500)) {
       m_lastTimeNotify = now;
-      emit timeChanged(durationMS);
+      const auto rawRenderTimeMS = std::chrono::duration_cast<std::chrono::microseconds>(now - before).count() / 1000.0f;
+      emit timeChanged(durationMS, rawRenderTimeMS);
    }
 
    // schedule next update immediately

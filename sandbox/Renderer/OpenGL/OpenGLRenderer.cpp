@@ -122,6 +122,7 @@ QRect OpenGLRenderer::drawBackground(const CameraComponent& camera) {
    glClearColor(backgroundColor.redF(), backgroundColor.greenF(), backgroundColor.blueF(), backgroundColor.alphaF());
    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
    glDisable(GL_SCISSOR_TEST);
+//   glFlush();
    return viewport;
 }
 
@@ -168,6 +169,7 @@ void OpenGLRenderer::drawObject(QMatrix4x4 model, QMatrix4x4 view, QMatrix4x4 pr
    m_program->bind();
 
    glDrawElements(GL_TRIANGLES, indexData.size(), GL_UNSIGNED_SHORT, nullptr);
+//   glFlush();
 
    m_vao->release();
    m_vertexBuffer->release();

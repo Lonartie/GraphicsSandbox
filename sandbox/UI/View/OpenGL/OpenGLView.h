@@ -18,7 +18,7 @@ public:
    [[nodiscard]] QWidget* asWidget() override;
 
 signals:
-   void timeChanged(float time);
+   void timeChanged(float time, float renderTime);
 
 public slots:
    void setScene(Scene* scene) override;
