@@ -6,8 +6,8 @@
 #include <QSurface>
 #include <utility>
 
-OpenGLRenderer::OpenGLRenderer(QOpenGLContext*)
-    : QObject(nullptr), QOpenGLFunctions_4_0_Core() {
+OpenGLRenderer::OpenGLRenderer(QOpenGLContext* context)
+    : QObject(nullptr), QOpenGLFunctions_3_3_Core() {
 }
 
 OpenGLRenderer::~OpenGLRenderer() {
@@ -22,13 +22,15 @@ void OpenGLRenderer::setScene(Scene* scene) {
 }
 
 void OpenGLRenderer::init() {
-   initializeOpenGLFunctions();
+   if (!initializeOpenGLFunctions()) {
+      qFatal("Failed to initialize OpenGL functions");
+   }
 
-   glEnable(GL_MULTISAMPLE);
-   glEnable(GL_DEPTH_TEST);// enables depth testing
-   glEnable(GL_CULL_FACE); // enables face culling to only drawObject front faces
-   glCullFace(GL_FRONT);   // this will only drawObject the front faces
-   glFrontFace(GL_CW);     // this will make the front faces be the ones that are clockwise
+   glEnable(GL_MULTISAMPLE);// enables multisampling
+   glEnable(GL_DEPTH_TEST); // enables depth testing
+   glEnable(GL_CULL_FACE);  // enables face culling to only drawObject front faces
+   glCullFace(GL_FRONT);    // this will only drawObject the front faces
+   glFrontFace(GL_CW);      // this will make the front faces be the ones that are clockwise
 
    m_vao = new QOpenGLVertexArrayObject();
    m_vao->create();
@@ -122,7 +124,7 @@ QRect OpenGLRenderer::drawBackground(const CameraComponent& camera) {
    glClearColor(backgroundColor.redF(), backgroundColor.greenF(), backgroundColor.blueF(), backgroundColor.alphaF());
    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
    glDisable(GL_SCISSOR_TEST);
-//   glFlush();
+   //   glFlush();
    return viewport;
 }
 
@@ -141,9 +143,9 @@ void OpenGLRenderer::setLastStage(int stage) {
 }
 
 void OpenGLRenderer::drawObject(QMatrix4x4 model, QMatrix4x4 view, QMatrix4x4 projection,
-                          const std::vector<VertexData>& vertexData,
-                          const std::vector<uint16_t>& indexData,
-                          const std::optional<QColor>& solidColor) {
+                                const std::vector<VertexData>& vertexData,
+                                const std::vector<uint16_t>& indexData,
+                                const std::optional<QColor>& solidColor) {
    m_vao->bind();
 
    m_vertexBuffer->setUsagePattern(QOpenGLBuffer::DynamicDraw);
@@ -169,7 +171,7 @@ void OpenGLRenderer::drawObject(QMatrix4x4 model, QMatrix4x4 view, QMatrix4x4 pr
    m_program->bind();
 
    glDrawElements(GL_TRIANGLES, indexData.size(), GL_UNSIGNED_SHORT, nullptr);
-//   glFlush();
+   //   glFlush();
 
    m_vao->release();
    m_vertexBuffer->release();

@@ -36,6 +36,7 @@ QWidget* OpenGLView::asWidget() {
 }
 
 void OpenGLView::initializeGL() {
+   makeCurrent();
    m_renderer = new OpenGLRenderer(context());
    m_renderer->init();
    m_renderer->setScene(m_scene);

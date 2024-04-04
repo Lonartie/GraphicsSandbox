@@ -6,13 +6,6 @@
 
 MeshOpenGLWidget::MeshOpenGLWidget(QWidget* parent)
     : QOpenGLWidget(parent) {
-   QSurfaceFormat fmt;
-   fmt.setRenderableType(QSurfaceFormat::OpenGL);
-   fmt.setVersion(4, 0);
-   fmt.setProfile(QSurfaceFormat::CoreProfile);
-   fmt.setSamples(4);
-   setFormat(fmt);
-
    setMouseTracking(true);
    installEventFilter(this);
 }
