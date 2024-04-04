@@ -60,8 +60,8 @@ void MeshOpenGLWidget::paintGL() {
    glViewport(0, 0, width() * devicePixelRatio(), height() * devicePixelRatio());
 
    glEnable(GL_DEPTH_TEST); // enables depth testing
-   glEnable(GL_CULL_FACE); // enables face culling to only draw front faces
-   glCullFace(GL_FRONT); // this will only draw the front faces
+   glEnable(GL_CULL_FACE); // enables face culling to only drawObject front faces
+   glCullFace(GL_FRONT); // this will only drawObject the front faces
    glFrontFace(GL_CW); // this will make the front faces be the ones that are clockwise
 
    if (m_mesh == nullptr) return;

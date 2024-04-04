@@ -32,7 +32,7 @@ public slots:
 
 private:
    void renderCamera(const CameraComponent& camera, const TransformComponent& transform);
-   void draw(QMatrix4x4 model, QMatrix4x4 view, QMatrix4x4 projection,
+   void drawObject(QMatrix4x4 model, QMatrix4x4 view, QMatrix4x4 projection,
              const std::vector<VertexData>& vertexData,
              const std::vector<uint16_t>& indexData,
              const std::optional<QColor>& solidColor = std::nullopt);
@@ -50,4 +50,7 @@ private:
    QOpenGLBuffer* m_vertexBuffer = nullptr;
    QOpenGLBuffer* m_indexBuffer = nullptr;
    QOpenGLShaderProgram* m_program = nullptr;
+
+   QRect drawBackground(const CameraComponent& camera);
+   void drawScene(const CameraComponent& camera, const TransformComponent& transform, const QRect& viewport);
 };
