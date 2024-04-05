@@ -73,8 +73,8 @@ void OpenGLView::setScene(Scene* scene) {
       m_renderer->setScene(m_scene);
    }
 }
-bool OpenGLView::eventFilter(QObject* watched, QEvent* ev) {
 
+bool OpenGLView::eventFilter(QObject* watched, QEvent* ev) {
    if (ev->type() == QEvent::KeyPress) {
       auto event = dynamic_cast<QKeyEvent*>(ev);
       auto key = event->key();
@@ -117,7 +117,6 @@ bool OpenGLView::eventFilter(QObject* watched, QEvent* ev) {
             enableEditorCam(false);
             break;
       }
-      repaint();
    }
 
    if (editorEnabled()) {
@@ -162,9 +161,9 @@ bool OpenGLView::eventFilter(QObject* watched, QEvent* ev) {
             m_movement += QVector3D(-1, 0, 0);
          } else if (key == Qt::Key_D) {
             m_movement += QVector3D(1, 0, 0);
-         } else if (key == Qt::Key_Space) {
+         } else if (key == Qt::Key_E) {
             m_movement += QVector3D(0, 1, 0);
-         } else if (key == Qt::Key_Control) {
+         } else if (key == Qt::Key_Q) {
             m_movement += QVector3D(0, -1, 0);
          }
 
@@ -185,9 +184,9 @@ bool OpenGLView::eventFilter(QObject* watched, QEvent* ev) {
             m_movement -= QVector3D(-1, 0, 0);
          } else if (key == Qt::Key_D) {
             m_movement -= QVector3D(1, 0, 0);
-         } else if (key == Qt::Key_Space) {
+         } else if (key == Qt::Key_E) {
             m_movement -= QVector3D(0, 1, 0);
-         } else if (key == Qt::Key_Control) {
+         } else if (key == Qt::Key_Q) {
             m_movement -= QVector3D(0, -1, 0);
          }
 
