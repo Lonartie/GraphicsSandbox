@@ -28,4 +28,12 @@ struct TransformComponent : Component {
       auto sca = json["scale"].toArray();
       scale = QVector3D(sca[0].toDouble(), sca[1].toDouble(), sca[2].toDouble());
    }
+
+   QMatrix4x4 modelMatrix() const {
+      QMatrix4x4 model;
+      model.translate(position);
+      model.rotate(rotation);
+      model.scale(scale);
+      return model;
+   }
 };

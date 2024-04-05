@@ -43,7 +43,7 @@ private:
 
    std::optional<CameraComponent> m_editorCam;
    std::optional<TransformComponent> m_editorTrans;
-   QOpenGLShaderProgram* program(Object* obj);
+   static QOpenGLShaderProgram* program(Object* obj);
 
    QOpenGLVertexArrayObject* m_vao = nullptr;
    QOpenGLBuffer* m_vertexBuffer = nullptr;

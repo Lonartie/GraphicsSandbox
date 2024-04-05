@@ -44,6 +44,7 @@ void MeshComponentView::updateValues() {
       auto& [vertices, indices] = primitives[m_ui->type->currentText()];
       mesh.vertices = vertices;
       mesh.indices = indices;
+      mesh.dirty();
    }
 
    m_ui->vertexCount->setText(QString::number(mesh.vertices.size()));

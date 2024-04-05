@@ -5,6 +5,7 @@
 #include <QVector3D>
 #include <tuple>
 #include <unordered_map>
+#include <QOpenGLBuffer>
 
 struct VertexData {
    QVector3D position;
@@ -23,7 +24,7 @@ struct MeshComponent : Component {
    std::vector<VertexData> vertices;
    std::vector<uint16_t> indices;
 
-   QJsonObject toJson() const {
+   QJsonObject toJson() const override {
       QJsonObject json;
       QJsonArray verticesArray;
       for (const auto& vertex: vertices) {
@@ -40,8 +41,7 @@ struct MeshComponent : Component {
       json["indices"] = indicesArray;
       return json;
    }
-
-   void fromJson(const QJsonObject& json) {
+   void fromJson(const QJsonObject& json) override {
       vertices.clear();
       auto verticesArray = json["vertices"].toArray();
       for (const auto& vertex: verticesArray) {
@@ -59,6 +59,43 @@ struct MeshComponent : Component {
          indices.push_back(index.toInt());
       }
    }
+
+   void prepare(QOpenGLShaderProgram* program) override {
+      if (m_vertexBuffer == nullptr || m_indexBuffer == nullptr || isDirty()) {
+         m_vertexBuffer = new QOpenGLBuffer(QOpenGLBuffer::VertexBuffer);
+         m_indexBuffer = new QOpenGLBuffer(QOpenGLBuffer::IndexBuffer);
+         m_vertexBuffer->create();
+         m_indexBuffer->create();
+         m_vertexBuffer->bind();
+         m_vertexBuffer->allocate(vertices.data(), vertices.size() * sizeof(VertexData));
+         m_indexBuffer->bind();
+         m_indexBuffer->allocate(indices.data(), indices.size() * sizeof(uint16_t));
+         clean();
+      }
+   }
+
+   void bind(QOpenGLShaderProgram* program) override {
+      m_vertexBuffer->bind();
+      m_indexBuffer->bind();
+      program->enableAttributeArray("worldPos");
+      program->enableAttributeArray("worldUV");
+      program->setAttributeBuffer("worldPos", GL_FLOAT, offsetof(VertexData, position), 3, sizeof(VertexData));
+      program->setAttributeBuffer("worldUV", GL_FLOAT, offsetof(VertexData, uv), 2, sizeof(VertexData));
+   }
+
+   void release(QOpenGLShaderProgram* program) override {
+      m_vertexBuffer->release();
+      m_indexBuffer->release();
+   }
+
+   ~MeshComponent() override {
+      delete m_vertexBuffer;
+      delete m_indexBuffer;
+   }
+
+private:
+   QOpenGLBuffer* m_vertexBuffer = nullptr;
+   QOpenGLBuffer* m_indexBuffer = nullptr;
 };
 
 static std::pair<std::vector<VertexData>, std::vector<uint16_t>> cube_primitive_data = {

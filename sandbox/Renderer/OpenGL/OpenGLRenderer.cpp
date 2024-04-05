@@ -71,21 +71,14 @@ void OpenGLRenderer::drawScene(const CameraComponent& camera, const TransformCom
       glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
    }
 
-   QMatrix4x4 projection;
-   projection.perspective(camera.fov, float(viewport.width()) / float(viewport.height()), camera.nearClip, camera.farClip);
-   QMatrix4x4 view;
-   view.translate(0, 0, 0);
-   view.rotate(transform.rotation);
-   view.translate(transform.position);
+   QMatrix4x4 projection = camera.projectionMatrix(float(viewport.width()) / float(viewport.height()));
+   QMatrix4x4 view = camera.viewMatrix(transform);
 
    // Draw scene
    glViewport(viewport.x(), viewport.y(), viewport.width(), viewport.height());
    for (auto& [_, mesh]: ComponentsRegistry<MeshComponent>::Components()) {
       auto& meshTransform = mesh.parent().getComponent<TransformComponent>();
-      QMatrix4x4 model;
-      model.translate(meshTransform.position);
-      model.rotate(meshTransform.rotation);
-      model.scale(meshTransform.scale);
+      QMatrix4x4 model = meshTransform.modelMatrix();
       drawObject(model, view, projection, &mesh.parent());
    }
 }
@@ -120,79 +113,35 @@ void OpenGLRenderer::setLastStage(int stage) {
 }
 
 void OpenGLRenderer::drawObject(QMatrix4x4 model, QMatrix4x4 view, QMatrix4x4 projection, Object* obj) {
-   auto& vertexData = obj->getComponent<MeshComponent>().vertices;
-   auto& indexData = obj->getComponent<MeshComponent>().indices;
+   auto& mesh = obj->getComponent<MeshComponent>();
    auto* prgm = program(obj);
 
-   {// setting up the shader program
-      m_vao->bind();
-
-      m_vertexBuffer->setUsagePattern(QOpenGLBuffer::DynamicDraw);
-      m_vertexBuffer->bind();
-      m_vertexBuffer->allocate(vertexData.data(), vertexData.size() * sizeof(VertexData));
-
-      m_indexBuffer->setUsagePattern(QOpenGLBuffer::DynamicDraw);
-      m_indexBuffer->bind();
-      m_indexBuffer->allocate(indexData.data(), indexData.size() * sizeof(uint16_t));
-
-      prgm->bind();
-      prgm->enableAttributeArray("worldPos");
-      prgm->enableAttributeArray("worldUV");
-      prgm->setAttributeBuffer("worldPos", GL_FLOAT, offsetof(VertexData, position), 3, sizeof(VertexData));
-      prgm->setAttributeBuffer("worldUV", GL_FLOAT, offsetof(VertexData, uv), 2, sizeof(VertexData));
-   }
+   // setting up the shader program
+   m_vao->bind();
+   prgm->bind();
+   mesh.prepare(prgm);
+   mesh.bind(prgm);
 
    // bind uniform data for all shaders
    prgm->setUniformValue("model", model);
    prgm->setUniformValue("view", view);
    prgm->setUniformValue("projection", projection);
 
-   for (auto* texture: m_textures) {
-      delete texture;
-   }
-   m_textures.clear();
-
    // bind shader specific uniform data
-   int texCount = 0;
    if (obj->hasComponent<MaterialComponent>()) {
       auto& material = obj->getComponent<MaterialComponent>();
-      for (auto& [name, prop]: material.properties) {
-         if (prop.type == "bool") prgm->setUniformValue(name.toStdString().c_str(), prop.value.toBool());
-         else if (prop.type == "int")
-            prgm->setUniformValue(name.toStdString().c_str(), prop.value.toInt());
-         else if (prop.type == "float")
-            prgm->setUniformValue(name.toStdString().c_str(), prop.value.toFloat());
-         else if (prop.type == "QImage") {
-            auto image = prop.value.value<QImage>();
-            if (!image.isNull()) {
-               auto texture = new QOpenGLTexture(image.mirrored());
-               texture->setMinMagFilters(QOpenGLTexture::Nearest, QOpenGLTexture::Linear);
-               texture->setWrapMode(QOpenGLTexture::ClampToBorder);
-               texture->bind(GL_TEXTURE0 + texCount);
-               prgm->setUniformValue(name.toStdString().c_str(), GL_TEXTURE0 + texCount);
-               m_textures.push_back(texture);
-               texCount++;
-            }
-         } else if (prop.type == "QColor")
-            prgm->setUniformValue(name.toStdString().c_str(), prop.value.value<QColor>());
-         else if (prop.type == "QVector2D") {
-            auto vec = prop.value.value<QVector2D>();
-            prgm->setUniformValue(name.toStdString().c_str(), vec);
-         } else if (prop.type == "QVector3D") {
-            auto vec = prop.value.value<QVector3D>();
-            prgm->setUniformValue(name.toStdString().c_str(), vec);
-         } else if (prop.type == "QSizeF") {
-            auto vec = prop.value.value<QSizeF>();
-            prgm->setUniformValue(name.toStdString().c_str(), vec);
-         }
-      }
+      material.prepare(prgm);
+      material.bind(prgm);
    }
 
-   glDrawElements(GL_TRIANGLES, indexData.size(), GL_UNSIGNED_SHORT, nullptr);
+   glDrawElements(GL_TRIANGLES, mesh.indices.size(), GL_UNSIGNED_SHORT, nullptr);
 
    m_vao->release();
-   m_vertexBuffer->release();
-   m_indexBuffer->release();
+   mesh.release(prgm);
+   if (obj->hasComponent<MaterialComponent>()) {
+      auto& material = obj->getComponent<MaterialComponent>();
+      material.release(prgm);
+   }
 }
 
 const std::optional<CameraComponent>& OpenGLRenderer::editorCam() const {

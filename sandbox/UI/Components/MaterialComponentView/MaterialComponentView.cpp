@@ -50,7 +50,7 @@ void MaterialComponentView::init() {
 void MaterialComponentView::updateValues(const QString& name, const QString& type, const QVariant& value) {
    auto& mat = m_obj->getComponent<MaterialComponent>();
    mat.properties[name] = MaterialComponent::Property(type, value);
-
+   mat.dirty();
    emit objectChanged();
 }
 
@@ -69,6 +69,8 @@ void MaterialComponentView::selectShader(QString name, MaterialComponent& mat) {
    } else if (name == "Albedo") {
       createImageField("albedo", mat);
    }
+
+   mat.dirty();
 }
 
 void MaterialComponentView::createColorField(const QString& name, MaterialComponent& mat) {

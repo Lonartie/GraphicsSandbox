@@ -1,4 +1,8 @@
 #include "CameraComponentView.h"
+
+#undef near
+#undef far
+
 #include "ui_CameraComponentView.h"
 #include <QColorDialog>
 #include <QSlider>

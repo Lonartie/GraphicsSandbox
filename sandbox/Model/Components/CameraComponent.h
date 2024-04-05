@@ -1,5 +1,6 @@
 #pragma once
 #include "Component.h"
+#include "TransformComponent.h"
 #include <QColor>
 #include <QRectF>
 #include <array>
@@ -35,5 +36,19 @@ struct CameraComponent : Component {
       farClip = json["farClip"].toDouble();
       backgroundColor = QColor(json["backgroundColor"].toString());
       wireframe = json["wireframe"].toBool();
+   }
+
+   QMatrix4x4 projectionMatrix(float aspectRatio) const {
+      QMatrix4x4 projection;
+      projection.perspective(fov, aspectRatio, nearClip, farClip);
+      return projection;
+   }
+
+   QMatrix4x4 viewMatrix(const TransformComponent& transform) const {
+      QMatrix4x4 view;
+      view.translate(0, 0, 0);
+      view.rotate(transform.rotation);
+      view.translate(transform.position);
+      return view;
    }
 };

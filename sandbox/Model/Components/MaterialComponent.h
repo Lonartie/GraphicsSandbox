@@ -4,6 +4,7 @@
 #include <QColor>
 #include <QImage>
 #include <QMap>
+#include <QOpenGLTexture>
 #include <QQuaternion>
 #include <QVariant>
 #include <QVector2D>
@@ -109,4 +110,65 @@ struct MaterialComponent : Component {
          }
       }
    }
+
+   void prepare(QOpenGLShaderProgram* program) override {
+      if (m_textures.empty() || isDirty()) {
+         for (auto& [name, tex]: m_textures) {
+            delete tex;
+         }
+         m_textures.clear();
+
+         for (auto& [name, prop]: properties) {
+            if (prop.type == "QImage") {
+               auto texture = new QOpenGLTexture(prop.value.value<QImage>());
+               texture->setMinificationFilter(QOpenGLTexture::LinearMipMapLinear);
+               texture->setMagnificationFilter(QOpenGLTexture::Linear);
+               texture->setWrapMode(QOpenGLTexture::DirectionS, QOpenGLTexture::ClampToEdge);
+               texture->setWrapMode(QOpenGLTexture::DirectionT, QOpenGLTexture::ClampToEdge);
+               m_textures.emplace(name, texture);
+            }
+         }
+         clean();
+      }
+   }
+
+   void bind(QOpenGLShaderProgram* program) override {
+      for (auto& [name, prop]: properties) {
+         if (prop.type == "bool") program->setUniformValue(name.toStdString().c_str(), prop.value.toBool());
+         else if (prop.type == "int")
+            program->setUniformValue(name.toStdString().c_str(), prop.value.toInt());
+         else if (prop.type == "float")
+            program->setUniformValue(name.toStdString().c_str(), prop.value.toFloat());
+         else if (prop.type == "QImage") {
+            // handled at the end
+         } else if (prop.type == "QColor")
+            program->setUniformValue(name.toStdString().c_str(), prop.value.value<QColor>());
+         else if (prop.type == "QVector2D") {
+            auto vec = prop.value.value<QVector2D>();
+            program->setUniformValue(name.toStdString().c_str(), vec);
+         } else if (prop.type == "QVector3D") {
+            auto vec = prop.value.value<QVector3D>();
+            program->setUniformValue(name.toStdString().c_str(), vec);
+         } else if (prop.type == "QSizeF") {
+            auto vec = prop.value.value<QSizeF>();
+            program->setUniformValue(name.toStdString().c_str(), vec);
+         }
+      }
+
+      int texID = 0;
+      for (auto& [name, texture]: m_textures) {
+         texture->bind(GL_TEXTURE0 + texID);
+         program->setUniformValue(name.toStdString().c_str(), GL_TEXTURE0 + texID);
+         texID++;
+      }
+   }
+
+   void release(QOpenGLShaderProgram* program) override {
+      for (auto& [name, texture]: m_textures) {
+         texture->release();
+      }
+   }
+
+private:
+   std::unordered_map<QString, QOpenGLTexture*, QtHasher<QString>> m_textures;
 };
