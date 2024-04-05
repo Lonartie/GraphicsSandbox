@@ -1,4 +1,5 @@
 #include "MainWindow.h"
+#include "Common/ShaderProvider.h"
 #include "UI/View/OpenGL/OpenGLView.h"
 #include "ui_mainwindow.h"
 #include <QFileDialog>
@@ -23,6 +24,13 @@ MainWindow::MainWindow(QWidget* parent)
 
    connect(m_ui->sceneBrowser, &SceneBrowser::objectSelected, m_ui->objectEditor, &ObjectEditor::setObject);
    connect(m_ui->objectEditor, &ObjectEditor::objectChanged, m_ui->sceneBrowser, &SceneBrowser::rebuild);
+
+   QTimer::singleShot(0, [this] {
+      // the instance may ne be created before the first window has been shown
+      connect(&ShaderProvider::instance(), &ShaderProvider::fileError, [this](const QString& file, const QString& error) {
+         m_ui->statusbar->showMessage(QString("Error in file %1: %2").arg(file).arg(error), 5000);
+      });
+   });
 
    if (QFile::exists("test/test.scene")) {
       QFile file("test/test.scene");
@@ -56,8 +64,8 @@ void MainWindow::activateRenderer(const QString& name) {
 
    if (auto* openglView = dynamic_cast<OpenGLView*>(m_view)) {
       connect(openglView, &OpenGLView::timeChanged, [this](float time, float renderTime) {
-         m_ui->statusbar->showMessage(QString("Time: %1 ms FPS: %2 (Raw Render: %3 ms)")
-                                            .arg(QString::number(time, 'g', 3))
+         setWindowTitle(QString("SceneRenderer  Time: %1 ms FPS: %2 (Raw Render: %3 ms)")
+                              .arg(QString::number(time, 'g', 3))
                                             .arg(1000.0f / time)
                                             .arg(QString::number(renderTime, 'g', 3)));
       });

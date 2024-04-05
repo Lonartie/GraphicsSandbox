@@ -6,6 +6,7 @@
 #include <QOpenGLBuffer>
 #include <QOpenGLFunctions_3_3_Core>
 #include <QOpenGLShaderProgram>
+#include <QOpenGLTexture>
 #include <QOpenGLVertexArrayObject>
 
 class OpenGLRenderer : public QObject, public QOpenGLFunctions_3_3_Core {
@@ -32,10 +33,7 @@ public slots:
 
 private:
    void renderCamera(const CameraComponent& camera, const TransformComponent& transform);
-   void drawObject(QMatrix4x4 model, QMatrix4x4 view, QMatrix4x4 projection,
-             const std::vector<VertexData>& vertexData,
-             const std::vector<uint16_t>& indexData,
-             const std::optional<QColor>& solidColor = std::nullopt);
+   void drawObject(QMatrix4x4 model, QMatrix4x4 view, QMatrix4x4 projection, Object* obj);
 
 private:
    Scene* m_scene = nullptr;
@@ -45,11 +43,12 @@ private:
 
    std::optional<CameraComponent> m_editorCam;
    std::optional<TransformComponent> m_editorTrans;
+   QOpenGLShaderProgram* program(Object* obj);
 
    QOpenGLVertexArrayObject* m_vao = nullptr;
    QOpenGLBuffer* m_vertexBuffer = nullptr;
    QOpenGLBuffer* m_indexBuffer = nullptr;
-   QOpenGLShaderProgram* m_program = nullptr;
+   std::vector<QOpenGLTexture*> m_textures = {};
 
    QRect drawBackground(const CameraComponent& camera);
    void drawScene(const CameraComponent& camera, const TransformComponent& transform, const QRect& viewport);

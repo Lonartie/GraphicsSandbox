@@ -18,15 +18,27 @@ public:
    ~MaterialComponentView() override;
 
    QWidget* asWidget() override;
+
+public slots:
    void init() override;
+   void selectShader(QString name, MaterialComponent& mat);
 
 signals:
    void objectChanged();
 
 private slots:
-   void selectColor();
-   void updateValues();
+   void updateValues(const QString& name, const QString& type, const QVariant& value);
+
+   void createColorField(const QString& name, MaterialComponent& mat);
+   void createFloatField(const QString& name, MaterialComponent& mat);
+   void createIntField(const QString& name, MaterialComponent& mat);
+   void createBoolField(const QString& name, MaterialComponent& mat);
+   void createImageField(const QString& name, MaterialComponent& mat);
+   void createVector2DField(const QString& name, MaterialComponent& mat);
+   void createVector3DField(const QString& name, MaterialComponent& mat);
+   void createSizeField(const QString& name, MaterialComponent& mat);
 
 private:
    Ui::MaterialComponentView* m_ui;
+   std::vector<QWidget*> m_widgets;
 };

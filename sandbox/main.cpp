@@ -2,6 +2,7 @@
 #include <QApplication>
 #include <QFile>
 #include <QSurfaceFormat>
+#include "Common/ShaderProvider.h"
 
 int main(int argc, char** argv) {
    QSurfaceFormat format = QSurfaceFormat::defaultFormat();
