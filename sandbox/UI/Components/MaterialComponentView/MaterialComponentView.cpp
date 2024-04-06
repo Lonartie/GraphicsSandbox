@@ -14,10 +14,13 @@ MaterialComponentView::MaterialComponentView(QWidget* parent)
    m_ui->setupUi(this);
 
    connect(&ShaderProvider::instance(), &ShaderProvider::shadersChanged, [this](auto shaders) {
+      QSignalBlocker block(m_ui->shader);
+      auto selected = m_ui->shader->currentText();
       m_ui->shader->clear();
       for (auto& shader: shaders) {
          m_ui->shader->addItem(shader);
       }
+      m_ui->shader->setCurrentText(selected);
    });
 
    for (auto& shader: ShaderProvider::instance().getShaderNames()) {
@@ -66,7 +69,7 @@ void MaterialComponentView::selectShader(QString name, MaterialComponent& mat) {
 
    if (name == "Default") {
       createColorField("solidColor", mat);
-   } else if (name == "Albedo") {
+   } else if (name == "Material") {
       createImageField("albedo", mat);
    }
 

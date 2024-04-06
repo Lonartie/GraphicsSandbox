@@ -147,20 +147,39 @@ static std::pair<std::vector<VertexData>, std::vector<uint16_t>> cube_primitive_
 
 static std::pair<std::vector<VertexData>, std::vector<uint16_t>> pyramid_primitive_data = {
       {
-            {{0, 1, 0}, {0.5, 1}}, // top
-            {{-1, -1, -1}, {0, 1}},// front left
-            {{1, -1, -1}, {1, 1}}, // front right
-            {{1, -1, 1}, {1, 0}},  // back right
-            {{-1, -1, 1}, {0, 0}}, // back left
+            // bottom
+            {{1, -1, -1}, {0, 0}}, // bottom left
+            {{1, -1, 1}, {0, 1}},  // top left
+            {{-1, -1, 1}, {1, 1}}, // top right
+            {{-1, -1, -1}, {1, 0}},// bottom right
+
+            // front
+            {{-1, -1, -1}, {0, 0}},// bottom left
+            {{1, -1, -1}, {0, 1}}, // bottom right
+            {{0, 1, 0}, {.5f, 1}}, // top center
+
+            // right
+            {{1, -1, -1}, {0, 0}},// bottom left
+            {{1, -1, 1}, {0, 1}}, // bottom right
+            {{0, 1, 0}, {.5f, 1}},// top center
+
+            // back
+            {{1, -1, 1}, {0, 0}}, // bottom left
+            {{-1, -1, 1}, {0, 1}},// bottom right
+            {{0, 1, 0}, {.5f, 1}},// top center
+
+            // left
+            {{-1, -1, 1}, {0, 0}}, // bottom left
+            {{-1, -1, -1}, {0, 1}},// bottom right
+            {{0, 1, 0}, {.5f, 1}}, // top center
       },
       {
-            0, 2, 1,        // front
-            0, 3, 2,        // right
-            0, 4, 3,        // back
-            0, 1, 4,        // left
-            1, 2, 3, 3, 4, 1// bottom
-      }
-};
+            0, 1, 2, 2, 3, 0,// bottom
+            6, 5, 4,         // front
+            9, 8, 7,         // right
+            12, 11, 10,      // back
+            15, 14, 13,      // left
+      }};
 
 
 static std::unordered_map<QString, std::pair<std::vector<VertexData>, std::vector<uint16_t>>, QtHasher<QString>> primitives = {

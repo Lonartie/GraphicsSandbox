@@ -78,12 +78,13 @@ if (WIN32)
     )
 endif ()
 
-# folder which shall be copied AND REPLACED to the build directory
+# folders which shall be linked to the build directory
+
 set(SHADER_FOLDER ${CMAKE_CURRENT_SOURCE_DIR}/Renderer/OpenGL/Shaders)
 add_custom_command(TARGET sandbox POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different ${SHADER_FOLDER} $<TARGET_FILE_DIR:sandbox>/Shaders
+        COMMAND ${CMAKE_COMMAND} -E create_symlink ${SHADER_FOLDER} $<TARGET_FILE_DIR:sandbox>/Shaders
 )
 set(TEST_FOLDER ${CMAKE_CURRENT_SOURCE_DIR}/../test)
 add_custom_command(TARGET sandbox POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different ${TEST_FOLDER} $<TARGET_FILE_DIR:sandbox>/test
+        COMMAND ${CMAKE_COMMAND} -E create_symlink ${TEST_FOLDER} $<TARGET_FILE_DIR:sandbox>/test
 )
