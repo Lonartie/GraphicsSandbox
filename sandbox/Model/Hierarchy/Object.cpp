@@ -1,8 +1,16 @@
 #include "Object.h"
+#include "Scene.h"
 #include "Model/Components/TransformComponent.h"
 
 uptr<Object> Object::create() {
    auto obj = uptr<Object>(new Object());
+//   obj->addComponent<TransformComponent>();
+   return obj;
+}
+
+uptr<Object> Object::create(Scene* scene) {
+   auto obj = uptr<Object>(new Object());
+   obj->m_parent = scene;
    obj->addComponent<TransformComponent>();
    return obj;
 }
@@ -37,6 +45,7 @@ const QString& Object::name() const {
 
 Object::~Object() {
    // remove all components associated with this object
-   for (auto& deletor: GlobalComponentsRegistry::Deletors())
-      deletor(m_id);
+   if (m_parent) {
+      m_parent->unregister(this);
+   }
 }

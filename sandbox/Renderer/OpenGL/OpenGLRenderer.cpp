@@ -53,8 +53,8 @@ void OpenGLRenderer::render() {
    if (m_editorCam && m_editorTrans) {
       renderCamera(*m_editorCam, *m_editorTrans);
    } else {
-      for (auto& [_, comp]: ComponentsRegistry<CameraComponent>::Components()) {
-         renderCamera(comp, comp.parent().getComponent<TransformComponent>());
+      for (auto& [_, cam]: m_scene->components<CameraComponent>()) {
+         renderCamera(cam, cam.parent().getComponent<TransformComponent>());
       }
    }
 }
@@ -76,7 +76,7 @@ void OpenGLRenderer::drawScene(const CameraComponent& camera, const TransformCom
 
    // Draw scene
    glViewport(viewport.x(), viewport.y(), viewport.width(), viewport.height());
-   for (auto& [_, mesh]: ComponentsRegistry<MeshComponent>::Components()) {
+   for (auto& [_, mesh]: m_scene->components<MeshComponent>()) {
       auto& meshTransform = mesh.parent().getComponent<TransformComponent>();
       QMatrix4x4 model = meshTransform.modelMatrix();
       drawObject(model, view, projection, &mesh.parent());
@@ -138,6 +138,8 @@ void OpenGLRenderer::drawObject(QMatrix4x4 model, QMatrix4x4 view, QMatrix4x4 pr
 
    m_vao->release();
    mesh.release(prgm);
+
+   // release shader specific uniform data
    if (obj->hasComponent<MaterialComponent>()) {
       auto& material = obj->getComponent<MaterialComponent>();
       material.release(prgm);

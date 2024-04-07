@@ -71,6 +71,7 @@ void MaterialComponentView::selectShader(QString name, MaterialComponent& mat) {
       createColorField("solidColor", mat);
    } else if (name == "Material") {
       createImageField("albedo", mat);
+      createImageField("normal", mat);
    }
 
    mat.dirty();
@@ -202,12 +203,12 @@ void MaterialComponentView::createImageField(const QString& name, MaterialCompon
    auto* label = new QLabel(name);
    auto* preview = new QLabel();
    auto* button = new QPushButton("select");
+   auto* button2 = new QPushButton("clear");
    auto image = mat.properties.at(name).value.value<QImage>();
    if (!image.isNull()) {
       preview->setPixmap(QPixmap::fromImage(image).scaled(64, 64, Qt::KeepAspectRatio));
    }
    connect(button, &QPushButton::clicked, [=, this] {
-      auto before = mat.properties.at(name).value.value<QImage>();
       auto path = QFileDialog::getOpenFileName(this, "Select Image", "", "Images (*.png *.jpg *.bmp)");
       if (path.isEmpty()) return;
       QImage image(path);
@@ -215,11 +216,16 @@ void MaterialComponentView::createImageField(const QString& name, MaterialCompon
       preview->setPixmap(QPixmap::fromImage(image).scaled(64, 64, Qt::KeepAspectRatio));
       updateValues(name, "QImage", image);
    });
+   connect(button2, &QPushButton::clicked, [=, this] {
+      preview->clear();
+      updateValues(name, "QImage", QImage());
+   });
 
    // compose widget and add it to ui and m_widgets
    layout->addWidget(label);
    layout->addWidget(preview);
    layout->addWidget(button);
+   layout->addWidget(button2);
    auto containerWidget = new QWidget();
    containerWidget->setLayout(layout);
    m_ui->settings->addWidget(containerWidget);

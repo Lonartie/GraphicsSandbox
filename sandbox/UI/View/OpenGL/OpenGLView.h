@@ -22,6 +22,8 @@ signals:
 
 public slots:
    void setScene(Scene* scene) override;
+   void disableLiveUpdates();
+   void enableInspectionCamera();
 
 protected:
    void initializeGL() override;
@@ -48,4 +50,6 @@ private:
    QTimer m_movementTimer;
    CameraComponent m_editorCam = CameraComponent(nullptr);
    TransformComponent m_editorTrans = TransformComponent(nullptr);
+   bool m_live = true;
+   bool m_inspectionCamera = false;
 };

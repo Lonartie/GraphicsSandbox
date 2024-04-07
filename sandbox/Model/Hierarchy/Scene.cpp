@@ -16,24 +16,33 @@ uptr<Scene> Scene::createFromJson(const QJsonObject& json) {
    for (const auto& obj: json["objects"].toArray()) {
       scene->addObject(Object::createFromJson(obj.toObject()));
    }
-   GlobalComponentsRegistry::FromJson(json["components"].toObject(), objectGetter);
+   auto regSetter = [scene = scene.get()](QString name, sptr<void> o) {
+      scene->m_componentsRegistrar[name] = std::move(o);
+   };
+
+   GlobalComponentsRegistry::FromJson(regSetter, json["components"].toObject(), objectGetter);
 
    return scene;
 }
 
 QJsonObject Scene::toJson() const {
+   auto getter = [this] (QString name) {
+      return m_componentsRegistrar.at(name);
+   };
+
    QJsonObject json;
    QJsonArray objects;
    for (const auto& obj: m_objects) {
       objects.append(obj->toJson());
    }
    json["objects"] = objects;
-   json["components"] = GlobalComponentsRegistry::ToJson();
+   json["components"] = GlobalComponentsRegistry::ToJson(getter);
    return json;
 }
 
 void Scene::addObject(uptr<Object> obj) {
    m_objects.push_back(std::move(obj));
+   m_objects.back()->m_parent = this;
 }
 
 void Scene::removeObject(Object& obj) {
@@ -42,6 +51,7 @@ void Scene::removeObject(Object& obj) {
    });
 
    if (it != m_objects.end()) {
+      (*it)->m_parent = nullptr;
       m_objects.erase(it);
    }
 }
@@ -108,4 +118,23 @@ std::vector<Object*> Scene::objects() {
       objs.push_back(obj.get());
    }
    return objs;
+}
+
+void Scene::unregister(Object* obj) {
+   auto getter = [this](QString name) {
+      if (m_componentsRegistrar.find(name) == m_componentsRegistrar.end()){
+         return sptr<void>();
+      }
+      return m_componentsRegistrar.at(name);
+   };
+   for (auto& deletor : GlobalComponentsRegistry::Deletors()) {
+      deletor(getter, obj->id());
+   }
+}
+Scene::~Scene() {
+   // first clear objects !!!
+   m_objects.clear();
+
+   // only afterwards clear registry!!!
+   m_componentsRegistrar.clear();
 }

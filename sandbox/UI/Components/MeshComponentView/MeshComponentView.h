@@ -28,5 +28,9 @@ private slots:
    void updateValues();
 
 private:
+   Scene* recomposeScene(const MeshComponent& mesh);
+
+private:
    Ui::MeshComponentView* m_ui;
+   uptr<Scene> m_scene;
 };

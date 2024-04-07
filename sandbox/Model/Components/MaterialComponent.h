@@ -120,8 +120,10 @@ struct MaterialComponent : Component {
 
          for (auto& [name, prop]: properties) {
             if (prop.type == "QImage") {
-               auto texture = new QOpenGLTexture(prop.value.value<QImage>());
-               texture->setMinificationFilter(QOpenGLTexture::LinearMipMapLinear);
+               auto image = prop.value.value<QImage>();
+               if (image.isNull()) continue;
+               auto texture = new QOpenGLTexture(image.mirrored());
+               texture->setMinificationFilter(QOpenGLTexture::Linear);
                texture->setMagnificationFilter(QOpenGLTexture::Linear);
                texture->setWrapMode(QOpenGLTexture::DirectionS, QOpenGLTexture::ClampToEdge);
                texture->setWrapMode(QOpenGLTexture::DirectionT, QOpenGLTexture::ClampToEdge);
@@ -157,15 +159,19 @@ struct MaterialComponent : Component {
 
       int texID = 0;
       for (auto& [name, texture]: m_textures) {
-         texture->bind(GL_TEXTURE0 + texID);
-         program->setUniformValue(name.toStdString().c_str(), GL_TEXTURE0 + texID);
+         texture->bind(texID);
+         program->setUniformValue(name.toStdString().c_str(), texID);
          texID++;
       }
    }
 
    void release(QOpenGLShaderProgram* program) override {
-      for (auto& [name, texture]: m_textures) {
+      for (auto& [_, texture]: m_textures) {
          texture->release();
+      }
+
+      for (auto& [name, _]: properties) {
+         program->setUniformValue(name.toStdString().c_str(), 0);
       }
    }
 

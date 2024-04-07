@@ -76,7 +76,7 @@ bool SceneBrowser::eventFilter(QObject* watched, QEvent* event) {
       }
 
       menu.addAction("Add", [this] {
-         auto obj = Object::create();
+         auto obj = Object::create(m_scene);
          auto objID = obj->id();
          m_scene->addObject(std::move(obj));
          rebuild();

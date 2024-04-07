@@ -41,8 +41,6 @@ qt_add_executable(sandbox
         UI/Components/MeshComponentView/MeshComponentView.cpp
         UI/Components/MeshComponentView/MeshComponentView.h
         UI/Components/MeshComponentView/MeshComponentView.ui
-        UI/Components/MeshComponentView/MeshOpenGLWidget/MeshOpenGLWidget.cpp
-        UI/Components/MeshComponentView/MeshOpenGLWidget/MeshOpenGLWidget.h
         Common/ShaderProvider.cpp
         Common/ShaderProvider.h
         Model/Components/MaterialComponent.h
