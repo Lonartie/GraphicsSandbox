@@ -3,6 +3,7 @@
 #include "Model/Hierarchy/Object.h"
 #include <QJsonObject>
 #include <QOpenGLShaderProgram>
+#include <QJsonArray>
 
 struct Component {
    explicit Component(Object* parent) noexcept : m_parent(parent) {}
@@ -12,7 +13,6 @@ struct Component {
    Component& operator=(Component&& other) noexcept = default;
    virtual ~Component() = default;
 
-   bool standalone() const { return m_parent == nullptr; }
    const Object& parent() const { return *m_parent; }
    Object& parent() { return *m_parent; }
 

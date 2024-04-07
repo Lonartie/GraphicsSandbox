@@ -6,6 +6,7 @@
 #include <QObject>
 #include <memory>
 #include <vector>
+#include "Model/Components/ComponentsRegistry.h"
 
 class Object;
 
@@ -21,6 +22,7 @@ public:
 
    void addObject(uptr<Object> obj);
    void removeObject(Object& obj);
+   void copyObject(const Object& obj);
 
    std::optional<const Object*> findObject(const QString& name) const;
    std::optional<Object*> findObject(const QString& name);
@@ -86,7 +88,7 @@ T& Scene::getComponent(Object* obj) {
    }
 
    auto registry = std::static_pointer_cast<ComponentsRegistry<T>>(m_componentsRegistrar.at(name));
-   return registry->Components().at(obj->id());
+   return registry->components().at(obj->id());
 }
 
 template<typename T>
@@ -97,7 +99,7 @@ const T& Scene::getComponent(const Object* obj) {
    }
 
    auto registry = std::static_pointer_cast<ComponentsRegistry<T>>(m_componentsRegistrar.at(name));
-   return registry->Components().at(obj->id());
+   return registry->components().at(obj->id());
 }
 
 template<typename T>
@@ -108,7 +110,7 @@ T& Scene::addComponent(Object* obj) {
    }
 
    auto registry = std::static_pointer_cast<ComponentsRegistry<T>>(m_componentsRegistrar.at(name));
-   return registry->Components().emplace(obj->id(), obj).first->second;
+   return registry->components().emplace(obj->id(), obj).first->second;
 }
 
 template<typename T>
@@ -119,7 +121,7 @@ void Scene::removeComponent(Object* obj) {
    }
 
    auto registry = std::static_pointer_cast<ComponentsRegistry<T>>(m_componentsRegistrar.at(name));
-   registry->Components().erase(obj->id());
+   registry->components().erase(obj->id());
 }
 
 template<typename T>
@@ -130,7 +132,7 @@ bool Scene::hasComponent(const Object* obj) {
    }
 
    auto registry = std::static_pointer_cast<ComponentsRegistry<T>>(m_componentsRegistrar.at(name));
-   return registry->Components().contains(obj->id());
+   return registry->components().contains(obj->id());
 }
 
 template <typename T>
@@ -141,6 +143,6 @@ std::unordered_map<QUuid, T, QtHasher<QUuid>>& Scene::components() {
    }
 
    auto registry = std::static_pointer_cast<ComponentsRegistry<T>>(m_componentsRegistrar.at(name));
-   return registry->Components();
+   return registry->components();
 }
 

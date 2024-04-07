@@ -73,6 +73,11 @@ bool SceneBrowser::eventFilter(QObject* watched, QEvent* event) {
             rebuild();
             emit sceneChanged();
          });
+         menu.addAction("Copy", [this, obj] {
+            m_scene->copyObject(*obj);
+            rebuild();
+            emit sceneChanged();
+         });
       }
 
       menu.addAction("Add", [this] {

@@ -1,6 +1,5 @@
 #pragma once
 #include "Common/Common.h"
-#include "Model/Components/ComponentsRegistry.h"
 #include <QJsonObject>
 #include <QObject>
 #include <QUuid>

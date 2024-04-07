@@ -1,6 +1,7 @@
 #include "Object.h"
 #include "Scene.h"
 #include "Model/Components/TransformComponent.h"
+#include "Model/Components/ComponentsRegistry.h"
 
 uptr<Object> Object::create() {
    auto obj = uptr<Object>(new Object());

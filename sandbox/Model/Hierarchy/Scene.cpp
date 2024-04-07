@@ -138,3 +138,21 @@ Scene::~Scene() {
    // only afterwards clear registry!!!
    m_componentsRegistrar.clear();
 }
+
+void Scene::copyObject(const Object& obj) {
+   // intentionally without this parameter to avoid creating a transform component
+   // since we manually copy each component later
+   auto newObj = Object::create();
+   newObj->m_id = QUuid::createUuid();
+   newObj->setName(obj.name() + " (copy)");
+   newObj->enable(obj.enabled());
+
+   for (auto& [name, copier]: GlobalComponentsRegistry::Copiers()) {
+      if (!m_componentsRegistrar.contains(name)) continue;
+
+      auto compReg = m_componentsRegistrar.at(name);
+      copier(&obj, newObj.get(), compReg);
+   }
+
+   addObject(std::move(newObj));
+}
