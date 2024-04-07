@@ -25,6 +25,9 @@ public:
    void setName(const QString& name);
    const QString& name() const;
 
+   bool enabled() const;
+   void enable(bool enable);
+
    template <typename T> T& getComponent();
    template <typename T> const T& getComponent() const;
    template <typename T> T& addComponent();
@@ -37,5 +40,6 @@ protected:
 private:
    QUuid m_id = QUuid::createUuid();
    QString m_name = "<unnamed>";
+   bool m_enabled = true;
    Scene* m_parent = nullptr;
 };

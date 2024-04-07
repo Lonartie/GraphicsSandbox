@@ -17,6 +17,8 @@ ObjectEditor::ObjectEditor(QWidget* parent)
       m_ui->component->addItem(name);
    m_ui->component->setCurrentIndex(0);
    connect(m_ui->addComponent, &QPushButton::clicked, this, &ObjectEditor::addComponent);
+   connect(m_ui->enabled, &QCheckBox::toggled, [this](bool checked) { m_obj->enable(checked); });
+   connect(m_ui->enabled, &QCheckBox::toggled, this, &ObjectEditor::objectChanged);
 
    rebuild();
 }
@@ -33,9 +35,11 @@ void ObjectEditor::setObject(Object* object) {
 void ObjectEditor::rebuild() {
    QSignalBlocker block(this);
    QSignalBlocker block2(m_ui->name);
+   QSignalBlocker block3(m_ui->enabled);
 
    m_widgets.clear();
    this->setEnabled(m_obj != nullptr);
+   m_ui->enabled->setChecked(false);
    m_ui->name->setText("");
    while (auto* item = m_ui->scrollContent->layout()->takeAt(0)) {
       if (item->widget()) delete item->widget();
@@ -43,6 +47,7 @@ void ObjectEditor::rebuild() {
    }
 
    if (!m_obj) return;
+   m_ui->enabled->setChecked(m_obj->enabled());
    m_ui->name->setText(m_obj->name());
    auto views = ComponentsViewBase::Views();
    for (auto& name : ComponentsViewBase::SortedNames()) {

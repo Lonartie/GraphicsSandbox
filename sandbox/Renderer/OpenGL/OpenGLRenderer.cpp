@@ -54,6 +54,8 @@ void OpenGLRenderer::render() {
       renderCamera(*m_editorCam, *m_editorTrans);
    } else {
       for (auto& [_, cam]: m_scene->components<CameraComponent>()) {
+         if (!cam.parent().enabled()) continue;
+
          renderCamera(cam, cam.parent().getComponent<TransformComponent>());
       }
    }
@@ -77,6 +79,8 @@ void OpenGLRenderer::drawScene(const CameraComponent& camera, const TransformCom
    // Draw scene
    glViewport(viewport.x(), viewport.y(), viewport.width(), viewport.height());
    for (auto& [_, mesh]: m_scene->components<MeshComponent>()) {
+      if (!mesh.parent().enabled()) continue;
+
       auto& meshTransform = mesh.parent().getComponent<TransformComponent>();
       QMatrix4x4 model = meshTransform.modelMatrix();
       drawObject(model, view, projection, &mesh.parent());

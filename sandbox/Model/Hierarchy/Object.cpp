@@ -20,6 +20,7 @@ uptr<Object> Object::createFromJson(const QJsonObject& json) {
    // components will be deserialized later
    obj->m_id = QUuid::fromString(json["id"].toString());
    obj->setName(json["name"].toString());
+   obj->enable(json["enabled"].toBool(true));
    return obj;
 }
 
@@ -27,6 +28,7 @@ QJsonObject Object::toJson() const {
    QJsonObject json;
    json["id"] = m_id.toString();
    json["name"] = m_name;
+   json["enabled"] = m_enabled;
    return json;
 }
 
@@ -48,4 +50,12 @@ Object::~Object() {
    if (m_parent) {
       m_parent->unregister(this);
    }
+}
+
+bool Object::enabled() const {
+   return m_enabled;
+}
+
+void Object::enable(bool enable) {
+   m_enabled = enable;
 }
