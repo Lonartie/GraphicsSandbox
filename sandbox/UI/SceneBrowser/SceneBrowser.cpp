@@ -3,6 +3,7 @@
 #include <QMenu>
 #include <QMetaEnum>
 #include <QMouseEvent>
+#include <ranges>
 
 SceneBrowser::SceneBrowser(QWidget* parent)
     : QWidget(parent), m_ui(new Ui::SceneBrowser) {
@@ -32,7 +33,12 @@ void SceneBrowser::rebuild() {
 
    QSignalBlocker blocker(m_ui->list);
    m_ui->list->clear();
-   for (auto* obj : m_scene->objects()) {
+   auto objects = m_scene->objects();
+   std::ranges::sort(objects, [](const Object* a, const Object* b) {
+      return a->name() < b->name();
+   });
+
+   for (auto* obj : objects) {
       auto item = new QListWidgetItem(obj->name());
       item->setData(Qt::UserRole, QVariant::fromValue(obj));
       m_ui->list->addItem(item);
