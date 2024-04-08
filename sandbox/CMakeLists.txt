@@ -29,24 +29,24 @@ qt_add_executable(sandbox
         UI/View/ViewBase.h
         Model/Components/Component.h
         Model/Model.h
-        UI/Components/ComponentsView.h
-        UI/Components/CameraComponentView/CameraComponentView.cpp
-        UI/Components/CameraComponentView/CameraComponentView.h
-        UI/Components/CameraComponentView/CameraComponentView.ui
-        UI/Components/TransformComponentView/TransformComponentView.cpp
-        UI/Components/TransformComponentView/TransformComponentView.h
-        UI/Components/TransformComponentView/TransformComponentView.ui
+        UI/ObjectEditor/Components/ComponentsView.h
+        UI/ObjectEditor/Components/CameraComponentView/CameraComponentView.cpp
+        UI/ObjectEditor/Components/CameraComponentView/CameraComponentView.h
+        UI/ObjectEditor/Components/CameraComponentView/CameraComponentView.ui
+        UI/ObjectEditor/Components/TransformComponentView/TransformComponentView.cpp
+        UI/ObjectEditor/Components/TransformComponentView/TransformComponentView.h
+        UI/ObjectEditor/Components/TransformComponentView/TransformComponentView.ui
         Stylesheets/Stylesheets.qrc
         Model/Components/MeshComponent.h
-        UI/Components/MeshComponentView/MeshComponentView.cpp
-        UI/Components/MeshComponentView/MeshComponentView.h
-        UI/Components/MeshComponentView/MeshComponentView.ui
+        UI/ObjectEditor/Components/MeshComponentView/MeshComponentView.cpp
+        UI/ObjectEditor/Components/MeshComponentView/MeshComponentView.h
+        UI/ObjectEditor/Components/MeshComponentView/MeshComponentView.ui
         Common/ShaderProvider.cpp
         Common/ShaderProvider.h
         Model/Components/MaterialComponent.h
-        UI/Components/MaterialComponentView/MaterialComponentView.cpp
-        UI/Components/MaterialComponentView/MaterialComponentView.h
-        UI/Components/MaterialComponentView/MaterialComponentView.ui
+        UI/ObjectEditor/Components/MaterialComponentView/MaterialComponentView.cpp
+        UI/ObjectEditor/Components/MaterialComponentView/MaterialComponentView.h
+        UI/ObjectEditor/Components/MaterialComponentView/MaterialComponentView.ui
         Renderer/OpenGL/Shaders/Default/default.frag
         Renderer/OpenGL/Shaders/Default/default.vert
 )

@@ -1,5 +1,5 @@
 #include "ObjectEditor.h"
-#include "UI/Components/ComponentsView.h"
+#include "Components/ComponentsView.h"
 #include "ui_ObjectEditor.h"
 #include <QGroupBox>
 #include <QSpacerItem>

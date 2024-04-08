@@ -14,15 +14,23 @@ public:
 
    virtual ~Object() override;
 
-   static uptr<Object> create();
-   static uptr<Object> create(Scene* parent);
-   static uptr<Object> createFromJson(const QJsonObject& json);
+   static uptr<Object> create(Scene& parent);
+   static uptr<Object> createFromJson(const QJsonObject& json, Scene& scene);
    QJsonObject toJson() const;
 
    const QUuid& id() const;
 
    void setName(const QString& name);
    const QString& name() const;
+
+   void setParent(Object& parent);
+   void unsetParent();
+   std::optional<Object*> parent() const;
+   std::vector<Object*> children() const;
+   Scene* scene() const;
+
+   uint64_t order() const;
+   void setOrder(uint64_t order);
 
    bool enabled() const;
    void enable(bool enable);
@@ -40,5 +48,6 @@ private:
    QUuid m_id = QUuid::createUuid();
    QString m_name = "<unnamed>";
    bool m_enabled = true;
+   uint64_t m_order = 0;
    Scene* m_parent = nullptr;
 };

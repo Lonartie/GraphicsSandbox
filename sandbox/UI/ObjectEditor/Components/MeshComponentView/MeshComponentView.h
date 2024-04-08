@@ -1,6 +1,6 @@
 #pragma once
 #include "Model/Components/MeshComponent.h"
-#include "UI/Components/ComponentsView.h"
+#include "UI/ObjectEditor/Components/ComponentsView.h"
 #include <QWidget>
 
 namespace Ui {

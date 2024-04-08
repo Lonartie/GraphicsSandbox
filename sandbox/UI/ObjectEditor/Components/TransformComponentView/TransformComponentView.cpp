@@ -42,10 +42,13 @@ void TransformComponentView::updateValues() {
          m_ui->scaleY->value(),
          m_ui->scaleZ->value());
 
-   auto& transform = m_obj->getComponent<TransformComponent>();
+   TransformComponent transform(m_obj);
    transform.position = position;
    transform.rotation = QQuaternion::fromEulerAngles(rotation);
    transform.scale = scale;
+
+   auto* scene = m_obj->scene();
+   scene->updateRelativeTransformOf(*m_obj, transform);
 
    emit objectChanged();
 }
@@ -56,7 +59,8 @@ void TransformComponentView::init() {
          QSignalBlocker(m_ui->rotX), QSignalBlocker(m_ui->rotY), QSignalBlocker(m_ui->rotZ),
          QSignalBlocker(m_ui->scaleX), QSignalBlocker(m_ui->scaleY), QSignalBlocker(m_ui->scaleZ)};
 
-   auto& transform = m_obj->getComponent<TransformComponent>();
+   auto* scene = m_obj->scene();
+   auto transform = scene->toRelativeTransformOf(*m_obj);
 
    m_ui->posX->setValue(transform.position.x());
    m_ui->posY->setValue(transform.position.y());

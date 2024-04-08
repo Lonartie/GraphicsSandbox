@@ -23,6 +23,7 @@ MainWindow::MainWindow(QWidget* parent)
    });
 
    connect(m_ui->sceneBrowser, &SceneBrowser::objectSelected, m_ui->objectEditor, &ObjectEditor::setObject);
+   connect(m_ui->sceneBrowser, &SceneBrowser::sceneChanged, m_ui->objectEditor, &ObjectEditor::rebuild);
    connect(m_ui->objectEditor, &ObjectEditor::objectChanged, m_ui->sceneBrowser, &SceneBrowser::rebuild);
 
    QTimer::singleShot(0, [this] {

@@ -9,6 +9,7 @@
 #include "Model/Components/ComponentsRegistry.h"
 
 class Object;
+class TransformComponent;
 
 class Scene : public QObject, public std::enable_shared_from_this<Scene> {
    Q_OBJECT
@@ -22,7 +23,17 @@ public:
 
    void addObject(uptr<Object> obj);
    void removeObject(Object& obj);
-   void copyObject(const Object& obj);
+   Object& copyObject(const Object& obj);
+
+   void addChild(Object& parent, Object& child);
+   void removeChild(Object& parent, Object& child);
+   std::optional<Object*> parentOf(const Object& child);
+   std::vector<Object*> childrenOf(const Object& parent);
+   std::vector<Object*> allChildrenOf(const Object& parent);
+
+   TransformComponent toRelativeTransformOf(Object& obj);
+   TransformComponent toGlobalTransformOf(Object& obj);
+   void updateRelativeTransformOf(Object& obj, const TransformComponent& newRelative);
 
    std::optional<const Object*> findObject(const QString& name) const;
    std::optional<Object*> findObject(const QString& name);
@@ -53,6 +64,7 @@ private:
 private:
    std::vector<uptr<Object>> m_objects;
    std::unordered_map<QString, sptr<void>, QtHasher<QString>> m_componentsRegistrar;
+   std::unordered_map<QUuid, std::vector<QUuid>, QtHasher<QUuid>> m_children;
 };
 
 template<typename T>

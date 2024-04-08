@@ -60,7 +60,7 @@ void MeshComponentView::updateValues() {
 Scene* MeshComponentView::recomposeScene(const MeshComponent& mesh) {
    m_scene = Scene::createEmpty();
 
-   auto obj = Object::create(m_scene.get());
+   auto obj = Object::create(*m_scene);
    obj->addComponent<MeshComponent>();
    obj->addComponent<MaterialComponent>();
    obj->getComponent<MaterialComponent>().shader = "Default";

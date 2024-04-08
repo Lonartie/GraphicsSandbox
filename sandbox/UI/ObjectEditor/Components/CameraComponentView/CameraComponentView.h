@@ -1,7 +1,7 @@
 #pragma once
 #include <QWidget>
 #include "Model/Components/CameraComponent.h"
-#include "UI/Components/ComponentsView.h"
+#include "UI/ObjectEditor/Components/ComponentsView.h"
 
 namespace Ui {
    class CameraComponentView;

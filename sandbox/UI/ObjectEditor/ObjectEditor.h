@@ -18,12 +18,12 @@ signals:
 
 public slots:
    void setObject(Object* object);
+   void rebuild();
 
 protected:
    bool eventFilter(QObject* watched, QEvent* event) override;
 
 private slots:
-   void rebuild();
    void addComponent();
 
 private:
