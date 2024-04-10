@@ -74,7 +74,7 @@ void OpenGLRenderer::drawScene(const CameraComponent& camera, const TransformCom
    }
 
    QMatrix4x4 projection = camera.projectionMatrix(float(viewport.width()) / float(viewport.height()));
-   QMatrix4x4 view = camera.viewMatrix(transform);
+   QMatrix4x4 view = transform.modelMatrix().inverted();
 
    // Draw scene
    glViewport(viewport.x(), viewport.y(), viewport.width(), viewport.height());

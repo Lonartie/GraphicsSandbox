@@ -3,6 +3,8 @@
 #include "Model/Hierarchy/Object.h"
 #include <QQuaternion>
 #include <QVector3D>
+#include <QDebug>
+#include <QDataStream>
 
 struct TransformComponent : Component {
    static inline QString Name = "Transform";
@@ -30,10 +32,77 @@ struct TransformComponent : Component {
    }
 
    QMatrix4x4 modelMatrix() const {
+      static QMatrix4x4 defaultMatrix;
+      defaultMatrix.translate(QVector3D());
+      defaultMatrix.rotate(QQuaternion());
+      defaultMatrix.scale(QVector3D(1, 1, 1));
+
+      QMatrix4x4 parentModel = hasParent() && parent().parent()
+                                  ? (*parent().parent())->getComponent<TransformComponent>().modelMatrix()
+                                  : defaultMatrix;
+
       QMatrix4x4 model;
       model.translate(position);
       model.rotate(rotation);
       model.scale(scale);
-      return model;
+
+      return parentModel * model;
+   }
+
+   TransformComponent toGlobal() const {
+      return FromMatrix(modelMatrix());
+   }
+
+   TransformComponent fromGlobal(const TransformComponent& global) const {
+      if (!hasParent() || !parent().parent()) return global;
+      auto parentModel = (*parent().parent())->getComponent<TransformComponent>().modelMatrix();
+      auto globalMatrix = global.modelMatrix();
+      auto localMatrix = parentModel.inverted() * globalMatrix;
+      return FromMatrix(localMatrix);
+   }
+
+   static TransformComponent FromMatrix(const QMatrix4x4& matrix) {
+      // decompose global matrix
+      QVector3D pos, scale;
+      QQuaternion rot;
+      pos = matrix.column(3).toVector3D();
+      scale.setX(matrix.column(0).toVector3D().length());
+      scale.setY(matrix.column(1).toVector3D().length());
+      scale.setZ(matrix.column(2).toVector3D().length());
+      QMatrix3x3 rotMat;
+      rotMat(0, 0) = matrix(0, 0) / scale.x();
+      rotMat(0, 1) = matrix(0, 1) / scale.y();
+      rotMat(0, 2) = matrix(0, 2) / scale.z();
+      rotMat(1, 0) = matrix(1, 0) / scale.x();
+      rotMat(1, 1) = matrix(1, 1) / scale.y();
+      rotMat(1, 2) = matrix(1, 2) / scale.z();
+      rotMat(2, 0) = matrix(2, 0) / scale.x();
+      rotMat(2, 1) = matrix(2, 1) / scale.y();
+      rotMat(2, 2) = matrix(2, 2) / scale.z();
+      rot = QQuaternion::fromRotationMatrix(rotMat);
+
+      TransformComponent result(nullptr);
+      result.position = pos;
+      result.rotation = rot;
+      result.scale = scale;
+
+      return result;
    }
 };
+
+inline QDataStream& operator<<(QDataStream& stream, const TransformComponent& transform) {
+   stream << transform.position << transform.rotation << transform.scale;
+   return stream;
+}
+
+inline QDataStream& operator>>(QDataStream& stream, TransformComponent& transform) {
+   stream >> transform.position >> transform.rotation >> transform.scale;
+   return stream;
+}
+
+inline QDebug& operator<<(QDebug& dbg, const TransformComponent& transform) {
+   dbg << "TransformComponent(" << transform.position << ", " << transform.rotation << ", " << transform.scale << ")";
+   return dbg;
+}
+
+Q_DECLARE_METATYPE(TransformComponent)

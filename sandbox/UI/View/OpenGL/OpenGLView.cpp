@@ -18,8 +18,8 @@ OpenGLView::OpenGLView(QWidget* parent)
       if (editorEnabled() && !m_inspectionCamera) {
          const auto direction = m_movement.normalized();
          const auto globalVector = direction * m_speed;
-         const auto localVector = m_editorTrans.rotation.conjugated().rotatedVector(globalVector);
-         m_editorTrans.position -= localVector;
+         const auto localVector = m_editorTrans.rotation.rotatedVector(globalVector);
+         m_editorTrans.position += localVector;
          m_renderer->setEditorTrans(m_editorTrans);
       }
    });
@@ -147,27 +147,27 @@ bool OpenGLView::eventFilter(QObject* watched, QEvent* ev) {
          auto event = dynamic_cast<QMouseEvent*>(ev);
          if (m_editorCamRotating) {
             auto delta = event->pos() - m_lastMousePos;
-            m_rotation += QVector2D(delta.y(), delta.x()) * m_mouseSpeed;
+            m_rotation += QVector2D(-delta.y(), -delta.x()) * m_mouseSpeed;
 
             if (!m_inspectionCamera) {
                auto rotationX = QQuaternion::fromEulerAngles(QVector3D(m_rotation.x(), 0, 0));
                auto rotationY = QQuaternion::fromEulerAngles(QVector3D(0, m_rotation.y(), 0));
-               m_editorTrans.rotation = rotationX * rotationY;
+               m_editorTrans.rotation = rotationY * rotationX;
             } else {
                // rotate camera around (0,0,0) with constant distance of 5
                const auto center = QVector3D(0, 0, 0);
 
-               auto rotationX = QQuaternion::fromEulerAngles(QVector3D(-m_rotation.x(), 0, 0));
-               auto rotationY = QQuaternion::fromEulerAngles(QVector3D(0, -m_rotation.y(), 0));
+               auto rotationX = QQuaternion::fromEulerAngles(QVector3D(m_rotation.x(), 0, 0));
+               auto rotationY = QQuaternion::fromEulerAngles(QVector3D(0, m_rotation.y(), 0));
 
                auto centerRotation = rotationY * rotationX;
 
                const auto globalForward = QVector3D(0, 0, -1);
                const auto direction = centerRotation.rotatedVector(globalForward).normalized();
-               const auto cameraPosition = center + direction * 5;
+               const auto cameraPosition = center + direction * -5;
 
                m_editorTrans.position = cameraPosition;
-               m_editorTrans.rotation = centerRotation.inverted();
+               m_editorTrans.rotation = centerRotation;
             }
 
             m_renderer->setEditorTrans(m_editorTrans);
@@ -254,6 +254,6 @@ void OpenGLView::disableLiveUpdates() {
 
 void OpenGLView::enableInspectionCamera() {
    m_inspectionCamera = true;
-   m_editorTrans.position = QVector3D(0, 0, -5);
+   m_editorTrans.position = QVector3D(0, 0, 5);
    enableEditorCam(true);
 }

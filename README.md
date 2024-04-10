@@ -15,7 +15,7 @@ is built with CMake and uses vcpkg for package management.
 
 ## Installation
 
-Using vcpkg you have to install `qtbase` and for windows
+Using vcpkg you have to install `qtbase` and `assimp` and for windows
 you need `qttools` as well. Once you have installed the
 required packages you can build the project with cmake.
 

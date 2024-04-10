@@ -1,4 +1,7 @@
 #include "SceneBrowser.h"
+
+#include <QFileDialog>
+
 #include "ui_SceneBrowser.h"
 #include <QMenu>
 #include <QMetaEnum>
@@ -7,6 +10,8 @@
 #include <QMimeData>
 #include <QTimer>
 #include <unordered_set>
+
+#include "Importer/AssimpImporter.h"
 
 SceneBrowser::SceneBrowser(QWidget* parent)
    : QWidget(parent), m_ui(new Ui::SceneBrowser) {
@@ -208,6 +213,14 @@ bool SceneBrowser::eventFilter(QObject* watched, QEvent* event) {
             });
          }
 
+         menu.addAction("Import", [this] {
+            auto path = QFileDialog::getOpenFileName(this, "Import", QString(), "Model Object (*.*)");
+            if (path.isEmpty()) return;
+            AssimpImporter::loadInto(path, *m_scene);
+            rebuild();
+            emit sceneChanged();
+         });
+
          menu.exec(globalPos);
       });
       return true;
@@ -255,6 +268,8 @@ void SceneBrowser::handleDropEvent(QDropEvent* event) {
          return;
       }
 
+      auto droppedObjGlobalTrans = (*droppedObject)->getComponent<TransformComponent>().toGlobal();
+
       // identify its parent
       auto droppedItemParent = droppedItem->parent();
       auto droppedObjectOrder = (*droppedObject)->order();
@@ -268,6 +283,11 @@ void SceneBrowser::handleDropEvent(QDropEvent* event) {
                newOrder = (*m_scene->findObject(lastItemBeforeOurs->data(0, Qt::UserRole).value<QUuid>()))->order() + 1;
             }
          }
+
+         auto& droppedObjTrans = (*droppedObject)->getComponent<TransformComponent>();
+         droppedObjTrans.position = droppedObjGlobalTrans.position;
+         droppedObjTrans.rotation = droppedObjGlobalTrans.rotation;
+         droppedObjTrans.scale = droppedObjGlobalTrans.scale;
       } else {
          auto parentID = droppedItemParent->data(0, Qt::UserRole).value<QUuid>();
          auto parentObject = m_scene->findObject(parentID);
@@ -300,6 +320,12 @@ void SceneBrowser::handleDropEvent(QDropEvent* event) {
          } else {
             qFatal() << "Couldn't find last item before dropped item";
          }
+
+         auto& droppedObjTrans = (*droppedObject)->getComponent<TransformComponent>();
+         auto localTrans = droppedObjTrans.fromGlobal(droppedObjGlobalTrans);
+         droppedObjTrans.position = localTrans.position;
+         droppedObjTrans.rotation = localTrans.rotation;
+         droppedObjTrans.scale = localTrans.scale;
       }
 
       // shift up

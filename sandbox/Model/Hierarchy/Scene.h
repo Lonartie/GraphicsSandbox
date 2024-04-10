@@ -31,10 +31,6 @@ public:
    std::vector<Object*> childrenOf(const Object& parent);
    std::vector<Object*> allChildrenOf(const Object& parent);
 
-   TransformComponent toRelativeTransformOf(Object& obj);
-   TransformComponent toGlobalTransformOf(Object& obj);
-   void updateRelativeTransformOf(Object& obj, const TransformComponent& newRelative);
-
    std::optional<const Object*> findObject(const QString& name) const;
    std::optional<Object*> findObject(const QString& name);
    std::optional<const Object*> findObject(QUuid id) const;

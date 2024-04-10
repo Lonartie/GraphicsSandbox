@@ -15,6 +15,7 @@ struct Component {
 
    const Object& parent() const { return *m_parent; }
    Object& parent() { return *m_parent; }
+   bool hasParent() const { return m_parent != nullptr; }
 
    virtual QJsonObject toJson() const = 0;
    virtual void fromJson(const QJsonObject& json) = 0;

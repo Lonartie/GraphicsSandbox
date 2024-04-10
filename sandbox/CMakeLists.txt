@@ -49,6 +49,8 @@ qt_add_executable(sandbox
         UI/ObjectEditor/Components/MaterialComponentView/MaterialComponentView.ui
         Renderer/OpenGL/Shaders/Default/default.frag
         Renderer/OpenGL/Shaders/Default/default.vert
+        Importer/AssimpImporter.cpp
+        Importer/AssimpImporter.h
 )
 
 target_link_libraries(sandbox
@@ -58,6 +60,10 @@ target_link_libraries(sandbox
         Qt6::Widgets
         Qt6::OpenGL
         Qt6::OpenGLWidgets
+)
+
+target_link_libraries(sandbox PRIVATE
+        assimp::assimp
 )
 
 if (APPLE)

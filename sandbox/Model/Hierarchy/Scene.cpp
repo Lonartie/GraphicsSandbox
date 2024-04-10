@@ -5,6 +5,36 @@
 #include <ranges>
 #include <unordered_set>
 
+namespace {
+   QMatrix4x4 toMatrix(QVector3D pos, QQuaternion rot, QVector3D scale) {
+      QMatrix4x4 matrix;
+      matrix.translate(pos);
+      matrix.rotate(rot);
+      matrix.scale(scale);
+      return matrix;
+   }
+
+   QMatrix4x4 toMatrix(const TransformComponent& transform) {
+      return toMatrix(transform.position, transform.rotation, transform.scale);
+   }
+
+   std::tuple<QVector3D, QQuaternion, QVector3D> fromMatrix(const QMatrix4x4& matrix) {
+      QVector3D pos, scale;
+      QQuaternion rot;
+
+      pos = matrix.column(3).toVector3D();
+      scale.setX(matrix.column(0).toVector3D().length());
+      scale.setY(matrix.column(1).toVector3D().length());
+      scale.setZ(matrix.column(2).toVector3D().length());
+      QMatrix3x3 rotMat;
+      rotMat(0, 0) = matrix(0, 0) / scale.x(); rotMat(0, 1) = matrix(0, 1) / scale.y(); rotMat(0, 2) = matrix(0, 2) / scale.z();
+      rotMat(1, 0) = matrix(1, 0) / scale.x(); rotMat(1, 1) = matrix(1, 1) / scale.y(); rotMat(1, 2) = matrix(1, 2) / scale.z();
+      rotMat(2, 0) = matrix(2, 0) / scale.x(); rotMat(2, 1) = matrix(2, 1) / scale.y(); rotMat(2, 2) = matrix(2, 2) / scale.z();
+      rot = QQuaternion::fromRotationMatrix(rotMat);
+      return {pos, rot, scale};
+   }
+}
+
 uptr<Scene> Scene::createEmpty() {
    return uptr<Scene>(new Scene());
 }
@@ -156,7 +186,9 @@ void Scene::unregister(Object* obj) {
 
 Scene::~Scene() {
    // first clear objects !!!
-   m_objects.clear();
+   std::vector<uptr<Object> > tmp;
+   m_objects.swap(tmp);
+   tmp.clear();
 
    // only afterwards clear registry!!!
    m_componentsRegistrar.clear();
@@ -234,57 +266,4 @@ std::vector<Object*> Scene::allChildrenOf(const Object& parent) {
    std::unordered_set uniqueChildren(children.begin(), children.end());
    children.assign(uniqueChildren.begin(), uniqueChildren.end());
    return children;
-}
-
-TransformComponent Scene::toRelativeTransformOf(Object& obj) {
-   TransformComponent transform(&obj); // <- this is an unregistered component
-   transform.fromJson(obj.getComponent<TransformComponent>().toJson());
-   Object* current = &obj;
-   while (auto parent = current->parent()) {
-      auto& parentTransform = (*parent)->getComponent<TransformComponent>();
-      auto& childTransform = transform;
-      childTransform.position = childTransform.position - parentTransform.position;
-      // childTransform.rotation = childTransform.rotation - parentTransform.rotation;
-      // childTransform.scale = childTransform.scale / parentTransform.scale;
-      current = *parent;
-   }
-
-   return transform;
-}
-
-TransformComponent Scene::toGlobalTransformOf(Object& obj) {
-   TransformComponent transform(&obj); // <- this is an unregistered component
-   transform.fromJson(obj.getComponent<TransformComponent>().toJson());
-   Object* current = &obj;
-   while (auto parent = current->parent()) {
-      auto& parentTransform = (*parent)->getComponent<TransformComponent>();
-      auto& childTransform = transform;
-      childTransform.position = childTransform.position + parentTransform.position;
-      // childTransform.rotation = childTransform.rotation + parentTransform.rotation;
-      // childTransform.scale = childTransform.scale * parentTransform.scale;
-      current = *parent;
-   }
-
-   return transform;
-}
-
-void Scene::updateRelativeTransformOf(Object& obj, const TransformComponent& newRelative) {
-   auto oldRelative = toRelativeTransformOf(obj);
-   auto positionDiff = newRelative.position - oldRelative.position;
-   auto rotationDiff = newRelative.rotation - oldRelative.rotation;
-   auto scaleDiff = newRelative.scale - oldRelative.scale;
-
-   auto& transform = obj.getComponent<TransformComponent>();
-   transform.position = transform.position + positionDiff;
-   transform.rotation = transform.rotation + rotationDiff;
-   transform.scale = transform.scale + scaleDiff;
-
-   for (auto* child: obj.children()) {
-      TransformComponent oldRelativeChild = toRelativeTransformOf(*child);
-      TransformComponent newRelativeChild = oldRelativeChild;
-      newRelativeChild.position = oldRelativeChild.position + positionDiff;
-      // newRelativeChild.rotation = oldRelativeChild.rotation + rotationDiff;
-      // newRelativeChild.scale = oldRelativeChild.scale + scaleDiff;
-      updateRelativeTransformOf(*child, newRelativeChild);
-   }
 }
