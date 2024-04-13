@@ -84,9 +84,13 @@ Object::~Object() {
 }
 
 bool Object::enabled() const {
-   return m_enabled;
+   auto pt = parent();
+   return m_enabled && (!pt.has_value() || (*pt)->enabled());
 }
 
 void Object::enable(bool enable) {
    m_enabled = enable;
+   for (auto* child : children()) {
+      child->enable(enable);
+   }
 }
