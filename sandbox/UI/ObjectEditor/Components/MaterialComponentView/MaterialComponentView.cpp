@@ -8,7 +8,7 @@
 #include <QPushButton>
 
 MaterialComponentView::MaterialComponentView(QWidget* parent)
-    : QWidget(parent), m_ui(new Ui::MaterialComponentView) {
+   : QWidget(parent), m_ui(new Ui::MaterialComponentView) {
    REG_ASSERT(Registered);
 
    m_ui->setupUi(this);
@@ -195,7 +195,7 @@ void MaterialComponentView::createImageField(const QString& name, MaterialCompon
    // set default value if it has none
    if (!mat.properties.contains(name)) {
       mat.properties[name].type = "QImage";
-      mat.properties[name].value = QImage();
+      mat.properties[name].value = 0ull;
    }
 
    // build up ui for an image field
@@ -204,7 +204,11 @@ void MaterialComponentView::createImageField(const QString& name, MaterialCompon
    auto* preview = new QLabel();
    auto* button = new QPushButton("select");
    auto* button2 = new QPushButton("clear");
-   auto image = mat.properties.at(name).value.value<QImage>();
+   const auto imageID = mat.properties.at(name).value.value<uint64_t>();
+   static const QImage empty;
+   const auto& image = AssetProvider::instance().has(imageID)
+                          ? AssetProvider::instance().get<QImage>(imageID)
+                          : empty;
    if (!image.isNull()) {
       preview->setPixmap(QPixmap::fromImage(image).scaled(64, 64, Qt::KeepAspectRatio));
    }
@@ -214,11 +218,12 @@ void MaterialComponentView::createImageField(const QString& name, MaterialCompon
       QImage image(path);
       if (image.isNull()) return;
       preview->setPixmap(QPixmap::fromImage(image).scaled(64, 64, Qt::KeepAspectRatio));
-      updateValues(name, "QImage", image);
+      const auto id = AssetProvider::instance().add<QImage>(std::move(image));
+      updateValues(name, "QImage", id);
    });
    connect(button2, &QPushButton::clicked, [=, this] {
       preview->clear();
-      updateValues(name, "QImage", QImage());
+      updateValues(name, "QImage", 0ull);
    });
 
    // compose widget and add it to ui and m_widgets

@@ -31,5 +31,5 @@ protected:
 
 private:
    Object* m_parent = nullptr;
-   bool m_dirty = false;
+   bool m_dirty = true;
 };

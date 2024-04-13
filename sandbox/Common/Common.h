@@ -1,8 +1,11 @@
 #pragma once
 
 #include <memory>
+#include <QBuffer>
 #include <QHash>
 #include <QString>
+#include <QVariant>
+#include <QImage>
 
 using namespace Qt::Literals::StringLiterals;
 
@@ -19,6 +22,18 @@ template <typename T>
 struct QtHasher {
    std::size_t operator()(const T& id) const {
       return qHash(id);
+   }
+};
+
+template<>
+struct QtHasher<QVariant> {
+   std::size_t operator()(const QVariant& id) const {
+      QByteArray arr;
+      QBuffer buffer(&arr);
+      buffer.open(QIODevice::WriteOnly);
+      QDataStream stream(&buffer);
+      stream << id;
+      return qHash(arr);
    }
 };
 

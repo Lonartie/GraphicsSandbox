@@ -127,6 +127,6 @@ void MainWindow::saveScene() {
 
    QFile file(filename);
    file.open(QIODevice::WriteOnly);
-   file.write(QJsonDocument(m_scene->toJson()).toJson());
+   file.write(QJsonDocument(m_scene->toJson()).toJson(QJsonDocument::JsonFormat::Compact));
    file.close();
 }

@@ -5,6 +5,8 @@
 #include <ranges>
 #include <unordered_set>
 
+#include "Common/AssetProvider.h"
+
 namespace {
    QMatrix4x4 toMatrix(QVector3D pos, QQuaternion rot, QVector3D scale) {
       QMatrix4x4 matrix;
@@ -48,10 +50,12 @@ uptr<Scene> Scene::createFromJson(const QJsonObject& json) {
    for (const auto& obj: json["objects"].toArray()) {
       scene->addObject(Object::createFromJson(obj.toObject(), *scene));
    }
+
    auto regSetter = [scene = scene.get()](QString name, sptr<void> o) {
       scene->m_componentsRegistrar[name] = std::move(o);
    };
    auto childrenAssoc = json["children"].toObject();
+
    for (const auto& parent: childrenAssoc.keys()) {
       auto parentID = QUuid::fromString(parent);
       auto children = childrenAssoc[parent].toArray();
@@ -62,6 +66,7 @@ uptr<Scene> Scene::createFromJson(const QJsonObject& json) {
    }
 
    GlobalComponentsRegistry::FromJson(regSetter, json["components"].toObject(), objectGetter);
+   AssetProvider::instance().fromJson(json["assets"].toObject());
 
    return scene;
 }
@@ -87,6 +92,7 @@ QJsonObject Scene::toJson() const {
       childrenObject[parent.toString()] = childrenArray;
    }
    json["children"] = childrenObject;
+   json["assets"] = AssetProvider::instance().toJson();
    return json;
 }
 

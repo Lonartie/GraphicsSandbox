@@ -51,6 +51,8 @@ qt_add_executable(sandbox
         Renderer/OpenGL/Shaders/Default/default.vert
         Importer/AssimpImporter.cpp
         Importer/AssimpImporter.h
+        Common/AssetProvider.h
+        Common/AssetProvider.cpp
 )
 
 target_link_libraries(sandbox

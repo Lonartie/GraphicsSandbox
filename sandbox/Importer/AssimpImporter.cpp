@@ -5,23 +5,44 @@
 #include <ranges>
 #include <vector>
 #include <QMatrix3x3>
+#include <QDir>
+#include <QFileInfo>
+#include <QImageReader>
 
 #include "Model/Components/MaterialComponent.h"
 #include "Model/Components/MeshComponent.h"
+#include "Common/AssetProvider.h"
 
-static QUuid importNode(const aiNode* assimpNode,
-                                     const aiScene* assimpScene,
-                                     Scene& scene,
-                                     aiMatrix4x4 transform);
+namespace {
+   std::unordered_map<QString, uint64_t> LOADED;
+   uint64_t OBJECT_COUNT = 0;
+   uint64_t IMAGE_COUNT = 0;
+}
 
-static QUuid createObject(const aiNode* assimpNode,
+static QUuid importNode(const QDir& root,
+                        const aiNode* assimpNode,
+                        const aiScene* assimpScene,
+                        Scene& scene,
+                        aiMatrix4x4 transform);
+
+static QUuid createObject(const QDir& root,
+                          const aiNode* assimpNode,
                           aiMesh* assimpMesh,
                           const aiScene* assimpScene,
                           Scene& scene,
                           aiMatrix4x4* transform);
 
+static std::vector<uint64_t> loadMaterialTextures(const QDir& root,
+                                                  const aiMaterial* mat,
+                                                  aiTextureType type,
+                                                  const aiScene* scene);
+
 QUuid AssimpImporter::loadInto(const QString& path, Scene& scene) {
+   OBJECT_COUNT = 0;
+   IMAGE_COUNT = 0;
+
    Assimp::Importer importer;
+   const auto root = QFileInfo(path).absoluteDir();
    const aiScene* assimpScene = importer.ReadFile(
       path.toStdString(),
       aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_GenNormals);
@@ -30,10 +51,19 @@ QUuid AssimpImporter::loadInto(const QString& path, Scene& scene) {
       return {};
    }
 
-   return importNode(assimpScene->mRootNode, assimpScene, scene, aiMatrix4x4());
+   // preload textures
+   for (unsigned int i = 0; i < assimpScene->mNumMaterials; ++i) {
+      auto material = assimpScene->mMaterials[i];
+      for (int j = 0; j <= 17; ++j) {
+         loadMaterialTextures(root, material, (aiTextureType) j, assimpScene);
+      }
+   }
+
+   return importNode(root, assimpScene->mRootNode, assimpScene, scene, aiMatrix4x4());
 }
 
 QUuid importNode(
+   const QDir& root,
    const aiNode* assimpNode,
    const aiScene* assimpScene,
    Scene& scene,
@@ -42,12 +72,12 @@ QUuid importNode(
 
    aiMatrix4x4 globalMatrix = assimpNode->mTransformation * transform;
 
-   QUuid first = createObject(assimpNode, nullptr, assimpScene, scene, &globalMatrix);
+   QUuid first = createObject(root, assimpNode, nullptr, assimpScene, scene, &globalMatrix);
 
    // process meshes
    for (unsigned int i = 0; i < assimpNode->mNumMeshes; i++) {
       aiMesh* assimpMesh = assimpScene->mMeshes[assimpNode->mMeshes[i]];
-      auto id = createObject(assimpNode, assimpMesh, assimpScene, scene, nullptr);
+      auto id = createObject(root, assimpNode, assimpMesh, assimpScene, scene, nullptr);
       auto parentObj = scene.findObject(first);
       auto childObj = scene.findObject(id);
       if (parentObj && childObj) {
@@ -58,7 +88,7 @@ QUuid importNode(
 
    // process children
    for (unsigned int i = 0; i < assimpNode->mNumChildren; i++) {
-      auto child = importNode(assimpNode->mChildren[i], assimpScene, scene, globalMatrix);
+      auto child = importNode(root, assimpNode->mChildren[i], assimpScene, scene, globalMatrix);
       auto parentObj = scene.findObject(first);
       auto childObj = scene.findObject(child);
       if (parentObj && childObj) {
@@ -69,6 +99,7 @@ QUuid importNode(
 }
 
 QUuid createObject(
+   const QDir& root,
    const aiNode* assimpNode,
    aiMesh* assimpMesh,
    const aiScene* assimpScene,
@@ -77,8 +108,7 @@ QUuid createObject(
    auto obj = Object::create(scene);
    obj->setName(QString::fromStdString(assimpNode->mName.C_Str()));
    auto& trans = obj->getComponent<TransformComponent>();
-   auto& mesh = obj->addComponent<MeshComponent>();
-   auto& mat = obj->addComponent<MaterialComponent>();
+   qDebug() << "Added object #" << ++OBJECT_COUNT;
 
    if (transform) {
       aiVector3D position, scaling;
@@ -89,15 +119,16 @@ QUuid createObject(
       trans.scale = QVector3D(scaling.x, scaling.y, scaling.z);
    }
 
-   mat.shader = "Default";
-   mat.properties.emplace(
-      "solidColor",
-      MaterialComponent::Property{
-         .type = "QColor",
-         .value = QColor(Qt::white)
-      });
-
    if (assimpMesh) {
+      auto& mesh = obj->addComponent<MeshComponent>();
+      auto& mat = obj->addComponent<MaterialComponent>();
+      mat.shader = "Default";
+      mat.properties.emplace(
+         "solidColor",
+         MaterialComponent::Property{
+            .type = "QColor", .value = QColor(Qt::magenta)
+         });
+
       // process vertices and normals
       for (unsigned int i = 0; i < assimpMesh->mNumVertices; i++) {
          mesh.vertices.emplace_back(
@@ -125,9 +156,74 @@ QUuid createObject(
             mesh.indices.push_back(face.mIndices[j]);
          }
       }
+
+      // process material
+      auto materialIndex = assimpMesh->mMaterialIndex;
+      auto materials = assimpScene->mMaterials;
+
+      if (materialIndex < assimpScene->mNumMaterials) {
+         auto material = materials[materialIndex];
+         std::vector<uint64_t> albedoMaps = loadMaterialTextures(root, material, aiTextureType_DIFFUSE, assimpScene);
+
+         if (!albedoMaps.empty()) {
+            mat.shader = "Material";
+            mat.properties.emplace(
+               "albedo",
+               MaterialComponent::Property{
+                  .type = "QImage", .value = albedoMaps.at(0)
+               });
+            qDebug() << "Added image #" << ++IMAGE_COUNT;
+
+            std::vector<uint64_t> normalMaps = loadMaterialTextures(root, material, aiTextureType_HEIGHT, assimpScene);
+            if (!normalMaps.empty()) {
+               mat.properties.emplace(
+                  "normal",
+                  MaterialComponent::Property{
+                     .type = "QImage", .value = normalMaps.at(0)
+                  });
+               qDebug() << "Added image #" << ++IMAGE_COUNT;
+            }
+         }
+      }
    }
 
    const auto id = obj->id();
    scene.addObject(std::move(obj));
    return id;
+}
+
+static std::vector<uint64_t> loadMaterialTextures(const QDir& root,
+                                                  const aiMaterial* mat,
+                                                  aiTextureType type,
+                                                  const aiScene* scene) {
+   std::vector<uint64_t> result;
+   for (unsigned int i = 0; i < mat->GetTextureCount(type); i++) {
+      aiString str;
+      mat->GetTexture(type, i, &str);
+      QString path = root.absoluteFilePath(QString::fromStdString(str.C_Str()));
+      if (LOADED.contains(path)) {
+         result.push_back(LOADED.at(path));
+         continue;
+      }
+      QImageReader reader(path);
+      QImage image = reader.read();
+      if (image.isNull()) {
+         qDebug() << "Failed to load texture:" << reader.errorString();
+         qDebug() << "Trying to load a PNG variant";
+         QFileInfo info(path);
+         auto pngPath = root.absoluteFilePath(info.baseName() + ".png");
+         QImageReader pngReader(pngPath);
+         image = pngReader.read();
+         if (image.isNull()) {
+            qDebug() << "Failed to load PNG texture:" << pngReader.errorString();
+         } else {
+            LOADED.emplace(path, AssetProvider::instance().add<QImage>(std::move(image)));
+            result.push_back(LOADED.at(path));
+         }
+      } else {
+         LOADED.emplace(path, AssetProvider::instance().add<QImage>(std::move(image)));
+         result.push_back(LOADED.at(path));
+      }
+   }
+   return result;
 }

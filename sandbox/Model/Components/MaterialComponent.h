@@ -1,5 +1,6 @@
 #pragma once
 #include "Component.h"
+#include "Common/AssetProvider.h"
 #include <QBuffer>
 #include <QColor>
 #include <QImage>
@@ -23,8 +24,6 @@ struct MaterialComponent : Component {
 
       QJsonObject toJson() const {
          QJsonObject json;
-         //         json["type"] = type;
-         //         json["value"] = QJsonValue::fromVariant(value);
          json["type"] = type;
          if (type == "bool") json["value"] = value.toBool();
          else if (type == "int")
@@ -32,7 +31,7 @@ struct MaterialComponent : Component {
          else if (type == "float")
             json["value"] = value.toFloat();
          else if (type == "QImage")
-            json["value"] = ImageToBase64(value.value<QImage>());
+            json["value"] = QString::number(value.value<uint64_t>());
          else if (type == "QColor")
             json["value"] = value.value<QColor>().name();
          else if (type == "QVector2D") {
@@ -50,8 +49,6 @@ struct MaterialComponent : Component {
 
       static Property fromJson(const QJsonObject& json) {
          Property prop;
-//         prop.type = json["type"].toString();
-//         prop.value = json["value"].toVariant();
          prop.type = json["type"].toString();
          if (prop.type == "bool") prop.value = json["value"].toBool();
          else if (prop.type == "int")
@@ -59,7 +56,7 @@ struct MaterialComponent : Component {
          else if (prop.type == "float")
             prop.value = json["value"].toDouble();
          else if (prop.type == "QImage")
-            prop.value = Base64ToImage(json["value"].toString());
+            prop.value = json["value"].toString().toULongLong();
          else if (prop.type == "QColor")
             prop.value = QColor(json["value"].toString());
          else if (prop.type == "QVector2D") {
@@ -73,20 +70,6 @@ struct MaterialComponent : Component {
             prop.value = QSizeF(arr[0].toDouble(), arr[1].toDouble());
          }
          return prop;
-      }
-
-      static QString ImageToBase64(const QImage& image) {
-         QByteArray byteArray;
-         QBuffer buffer(&byteArray);
-         buffer.open(QIODevice::WriteOnly);
-         image.save(&buffer, "PNG");
-         return QString::fromUtf8(byteArray.toBase64());
-      }
-
-      static QImage Base64ToImage(const QString& base64) {
-         QImage image;
-         image.loadFromData(QByteArray::fromBase64(base64.toUtf8()), "PNG");
-         return image;
       }
    };
 
@@ -112,22 +95,11 @@ struct MaterialComponent : Component {
    }
 
    void prepare(QOpenGLShaderProgram* program) override {
-      if (m_textures.empty() || isDirty()) {
-         for (auto& [name, tex]: m_textures) {
-            delete tex;
-         }
-         m_textures.clear();
-
+      if (isDirty()) {
          for (auto& [name, prop]: properties) {
             if (prop.type == "QImage") {
-               auto image = prop.value.value<QImage>();
-               if (image.isNull()) continue;
-               auto texture = new QOpenGLTexture(image.mirrored());
-               texture->setMinificationFilter(QOpenGLTexture::Linear);
-               texture->setMagnificationFilter(QOpenGLTexture::Linear);
-               texture->setWrapMode(QOpenGLTexture::DirectionS, QOpenGLTexture::ClampToEdge);
-               texture->setWrapMode(QOpenGLTexture::DirectionT, QOpenGLTexture::ClampToEdge);
-               m_textures.emplace(name, texture);
+               const auto id = prop.value.toULongLong();
+               AssetProvider::instance().prepare<QImage>(id);
             }
          }
          clean();
@@ -135,6 +107,7 @@ struct MaterialComponent : Component {
    }
 
    void bind(QOpenGLShaderProgram* program) override {
+      int texID = 0;
       for (auto& [name, prop]: properties) {
          if (prop.type == "bool") program->setUniformValue(name.toStdString().c_str(), prop.value.toBool());
          else if (prop.type == "int")
@@ -142,7 +115,9 @@ struct MaterialComponent : Component {
          else if (prop.type == "float")
             program->setUniformValue(name.toStdString().c_str(), prop.value.toFloat());
          else if (prop.type == "QImage") {
-            // handled at the end
+            const auto id = prop.value.toULongLong();
+            AssetProvider::instance().bind<QImage>(id, texID);
+            program->setUniformValue(name.toStdString().c_str(), texID++);
          } else if (prop.type == "QColor")
             program->setUniformValue(name.toStdString().c_str(), prop.value.value<QColor>());
          else if (prop.type == "QVector2D") {
@@ -156,25 +131,15 @@ struct MaterialComponent : Component {
             program->setUniformValue(name.toStdString().c_str(), vec);
          }
       }
-
-      int texID = 0;
-      for (auto& [name, texture]: m_textures) {
-         texture->bind(texID);
-         program->setUniformValue(name.toStdString().c_str(), texID);
-         texID++;
-      }
    }
 
    void release(QOpenGLShaderProgram* program) override {
-      for (auto& [_, texture]: m_textures) {
-         texture->release();
-      }
-
-      for (auto& [name, _]: properties) {
+      for (auto& [name, prop]: properties) {
+         if (prop.type == "QImage") {
+            const auto id = prop.value.toULongLong();
+            AssetProvider::instance().unbind<QImage>(id);
+         }
          program->setUniformValue(name.toStdString().c_str(), 0);
       }
    }
-
-private:
-   std::unordered_map<QString, QOpenGLTexture*, QtHasher<QString>> m_textures;
 };
