@@ -25,12 +25,12 @@ required packages you can build the project with cmake.
 - [x] 3D scene with camera controls
 - [x] Rendering objects with solid colors
 - [x] Rendering albedo images
+- [x] Normal maps
+- [x] Custom model loading (using assimp)
 
 ## TODOs
 
-- [ ] Custom model loading
 - [ ] Lightning and shadows
-- [ ] Adding normal maps
 - [ ] Adding specular maps
 - [ ] Implement shininess and roughness
 - [ ] Implement cube maps / skyboxes
