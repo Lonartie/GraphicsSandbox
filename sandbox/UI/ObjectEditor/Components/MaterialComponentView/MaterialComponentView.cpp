@@ -52,7 +52,7 @@ void MaterialComponentView::init() {
 
 void MaterialComponentView::updateValues(const QString& name, const QString& type, const QVariant& value) {
    auto& mat = m_obj->getComponent<MaterialComponent>();
-   mat.properties[name] = MaterialComponent::Property(type, value);
+   mat.properties[name] = MaterialComponent::Property{type, value};
    mat.dirty();
    emit objectChanged();
 }

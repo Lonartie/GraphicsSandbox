@@ -3,17 +3,22 @@
 #include <QKeyEvent>
 #include <QOpenGLFunctions>
 
+constexpr auto FPS_TARGET = 60;
+
 [[maybe_unused]] static auto OpenGLViewReg = AutoRegisterView<OpenGLView>::registered;
 
 OpenGLView::OpenGLView(QWidget* parent)
-    : QOpenGLWidget(parent) {
+   : QOpenGLWidget(parent) {
    auto format = QSurfaceFormat::defaultFormat();
    format.setSamples(4);
+   format.setSwapBehavior(QSurfaceFormat::SingleBuffer);
+   format.setSwapInterval(0);
    setFormat(format);
    setFocusPolicy(Qt::FocusPolicy::StrongFocus);
    installEventFilter(this);
    m_movementTimer.setInterval(1);
    m_movementTimer.start();
+   m_updateTimer.setInterval((int) (1000.0 / FPS_TARGET));
    connect(&m_movementTimer, &QTimer::timeout, this, [this] {
       if (editorEnabled() && !m_inspectionCamera) {
          const auto direction = m_movement.normalized();
@@ -23,6 +28,7 @@ OpenGLView::OpenGLView(QWidget* parent)
          m_renderer->setEditorTrans(m_editorTrans);
       }
    });
+   connect(&m_updateTimer, &QTimer::timeout, this, [this] { update(); });
 }
 
 OpenGLView::~OpenGLView() {
@@ -31,9 +37,7 @@ OpenGLView::~OpenGLView() {
    doneCurrent();
 }
 
-QWidget* OpenGLView::asWidget() {
-   return this;
-}
+QWidget* OpenGLView::asWidget() { return this; }
 
 void OpenGLView::initializeGL() {
    m_renderer = new OpenGLRenderer(context());
@@ -55,29 +59,26 @@ void OpenGLView::resizeGL(int w, int h) {
 }
 
 void OpenGLView::paintGL() {
+   if (!m_updateTimer.isActive()) { m_updateTimer.start(); }
    const auto before = std::chrono::high_resolution_clock::now();
    m_renderer->render();
    const auto now = std::chrono::high_resolution_clock::now();
-   const auto durationMS = std::chrono::duration_cast<std::chrono::microseconds>(now - m_lastRenderTime).count() / 1000.0f;
+   const auto durationMS =
+         std::chrono::duration_cast<std::chrono::microseconds>(now - m_lastRenderTime).count() /
+         1000.0f;
    m_lastRenderTime = now;
 
    if (now - m_lastTimeNotify > std::chrono::milliseconds(500)) {
       m_lastTimeNotify = now;
-      const auto rawRenderTimeMS = std::chrono::duration_cast<std::chrono::microseconds>(now - before).count() / 1000.0f;
+      const auto rawRenderTimeMS =
+            std::chrono::duration_cast<std::chrono::microseconds>(now - before).count() / 1000.0f;
       emit timeChanged(durationMS, rawRenderTimeMS);
-   }
-
-   if (m_live) {
-      // schedule next update immediately
-      update();
    }
 }
 
 void OpenGLView::setScene(Scene* scene) {
    m_scene = scene;
-   if (m_renderer) {
-      m_renderer->setScene(m_scene);
-   }
+   if (m_renderer) { m_renderer->setScene(m_scene); }
 }
 
 bool OpenGLView::eventFilter(QObject* watched, QEvent* ev) {
@@ -134,14 +135,12 @@ bool OpenGLView::eventFilter(QObject* watched, QEvent* ev) {
             m_editorCamRotating = true;
             m_lastMousePos = event->pos();
             setCursor(Qt::BlankCursor);
-            update();
          }
       } else if (ev->type() == QEvent::MouseButtonRelease) {
          auto event = dynamic_cast<QMouseEvent*>(ev);
          if (event->button() == button) {
             m_editorCamRotating = false;
             unsetCursor();
-            update();
          }
       } else if (ev->type() == QEvent::MouseMove && m_editorCamRotating) {
          auto event = dynamic_cast<QMouseEvent*>(ev);
@@ -172,7 +171,6 @@ bool OpenGLView::eventFilter(QObject* watched, QEvent* ev) {
 
             m_renderer->setEditorTrans(m_editorTrans);
             QCursor::setPos(mapToGlobal(m_lastMousePos));
-            update();
          }
       }
 
@@ -181,46 +179,26 @@ bool OpenGLView::eventFilter(QObject* watched, QEvent* ev) {
          if (ev->type() == QEvent::KeyPress) {
             auto event = dynamic_cast<QKeyEvent*>(ev);
             auto key = event->key();
-            if (key == Qt::Key_W) {
-               m_movement += QVector3D(0, 0, -1);
-            } else if (key == Qt::Key_S) {
-               m_movement += QVector3D(0, 0, 1);
-            } else if (key == Qt::Key_A) {
-               m_movement += QVector3D(-1, 0, 0);
-            } else if (key == Qt::Key_D) {
+            if (key == Qt::Key_W) { m_movement += QVector3D(0, 0, -1); } else if (
+               key == Qt::Key_S) { m_movement += QVector3D(0, 0, 1); } else if (
+               key == Qt::Key_A) { m_movement += QVector3D(-1, 0, 0); } else if (key == Qt::Key_D) {
                m_movement += QVector3D(1, 0, 0);
-            } else if (key == Qt::Key_E) {
-               m_movement += QVector3D(0, 1, 0);
-            } else if (key == Qt::Key_Q) {
-               m_movement += QVector3D(0, -1, 0);
-            }
+            } else if (key == Qt::Key_E) { m_movement += QVector3D(0, 1, 0); } else if (
+               key == Qt::Key_Q) { m_movement += QVector3D(0, -1, 0); }
 
-            if (key == Qt::Key_Shift) {
-               m_speed = 1.f;
-            }
-            if (key == Qt::Key_Alt) {
-               m_speed = .01f;
-            }
+            if (key == Qt::Key_Shift) { m_speed = 1.f; }
+            if (key == Qt::Key_Alt) { m_speed = .01f; }
          } else if (ev->type() == QEvent::KeyRelease) {
             auto event = dynamic_cast<QKeyEvent*>(ev);
             auto key = event->key();
-            if (key == Qt::Key_W) {
-               m_movement -= QVector3D(0, 0, -1);
-            } else if (key == Qt::Key_S) {
-               m_movement -= QVector3D(0, 0, 1);
-            } else if (key == Qt::Key_A) {
-               m_movement -= QVector3D(-1, 0, 0);
-            } else if (key == Qt::Key_D) {
+            if (key == Qt::Key_W) { m_movement -= QVector3D(0, 0, -1); } else if (
+               key == Qt::Key_S) { m_movement -= QVector3D(0, 0, 1); } else if (
+               key == Qt::Key_A) { m_movement -= QVector3D(-1, 0, 0); } else if (key == Qt::Key_D) {
                m_movement -= QVector3D(1, 0, 0);
-            } else if (key == Qt::Key_E) {
-               m_movement -= QVector3D(0, 1, 0);
-            } else if (key == Qt::Key_Q) {
-               m_movement -= QVector3D(0, -1, 0);
-            }
+            } else if (key == Qt::Key_E) { m_movement -= QVector3D(0, 1, 0); } else if (
+               key == Qt::Key_Q) { m_movement -= QVector3D(0, -1, 0); }
 
-            if (key == Qt::Key_Shift || key == Qt::Key_Alt) {
-               m_speed = .2f;
-            }
+            if (key == Qt::Key_Shift || key == Qt::Key_Alt) { m_speed = .2f; }
 
             // if something is stuck, reset with esc
             if (key == Qt::Key_Escape) {
@@ -248,9 +226,7 @@ bool OpenGLView::editorEnabled() const {
    return m_renderer && m_renderer->editorCam() && m_renderer->editorTrans();
 }
 
-void OpenGLView::disableLiveUpdates() {
-   m_live = false;
-}
+void OpenGLView::disableLiveUpdates() { m_live = false; }
 
 void OpenGLView::enableInspectionCamera() {
    m_inspectionCamera = true;

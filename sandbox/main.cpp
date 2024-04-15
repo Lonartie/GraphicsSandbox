@@ -7,6 +7,7 @@
 int main(int argc, char** argv) {
    QSurfaceFormat format = QSurfaceFormat::defaultFormat();
    format.setSwapBehavior(QSurfaceFormat::SingleBuffer);
+   format.setSwapInterval(0);
    format.setVersion(4,1);
    format.setProfile(QSurfaceFormat::CoreProfile);
    format.setSamples(4);

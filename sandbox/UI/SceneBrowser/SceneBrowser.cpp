@@ -28,9 +28,7 @@ SceneBrowser::SceneBrowser(QWidget* parent)
    m_ui->list->viewport()->installEventFilter(this);
 }
 
-SceneBrowser::~SceneBrowser() {
-   delete m_ui;
-}
+SceneBrowser::~SceneBrowser() { delete m_ui; }
 
 void SceneBrowser::setScene(Scene* scene) {
    m_scene = scene;
@@ -61,9 +59,7 @@ void SceneBrowser::rebuild() {
    std::unordered_set<uint64_t> orders;
    uint64_t maxOrder = 0;
    for (auto* obj: m_scene->objects()) {
-      if (orders.contains(obj->order())) {
-         obj->setOrder(maxOrder + 1);
-      }
+      if (orders.contains(obj->order())) { obj->setOrder(maxOrder + 1); }
       orders.insert(obj->order());
       maxOrder = std::max(maxOrder, obj->order());
    }
@@ -82,9 +78,7 @@ void SceneBrowser::rebuild() {
    for (auto& item: m_items) {
       auto id = item->data(0, Qt::UserRole).value<QUuid>();
       auto it = expanded.find(id);
-      if (it != expanded.end()) {
-         item->setExpanded(it->second);
-      }
+      if (it != expanded.end()) { item->setExpanded(it->second); }
    }
 
    // restore selected item id if it still exists
@@ -135,17 +129,13 @@ QTreeWidgetItem* SceneBrowser::lastItemBefore(QTreeWidgetItem* item) {
       if (current == item) return true;
       lastWatched = current;
       for (int i = 0; i < current->childCount(); ++i) {
-         if (findLast(current->child(i))) {
-            return true;
-         }
+         if (findLast(current->child(i))) { return true; }
       }
       return false;
    };
 
    for (int topLevelI = 0; topLevelI < m_ui->list->topLevelItemCount(); ++topLevelI) {
-      if (findLast(m_ui->list->topLevelItem(topLevelI))) {
-         return lastWatched;
-      }
+      if (findLast(m_ui->list->topLevelItem(topLevelI))) { return lastWatched; }
    }
 
    return nullptr;
@@ -155,11 +145,13 @@ bool SceneBrowser::eventFilter(QObject* watched, QEvent* event) {
    if (event->type() == QEvent::ContextMenu) {
       QTimer::singleShot(0, [this] {
          auto globalPos = QCursor::pos();
-         auto item = m_ui->list->itemAt(m_ui->list->viewport()->mapFromGlobal(globalPos));
+         auto item = m_ui->list->itemAt(
+               m_ui->list->viewport()->mapFromGlobal(globalPos));
          QMenu menu;
 
          if (item) {
-            auto obj = *m_scene->findObject(item->data(0, Qt::UserRole).value<QUuid>());
+            auto obj = *m_scene->findObject(
+                  item->data(0, Qt::UserRole).value<QUuid>());
             menu.addAction("Delete", [this, obj] {
                m_scene->removeObject(*obj);
                rebuild();
@@ -169,12 +161,12 @@ bool SceneBrowser::eventFilter(QObject* watched, QEvent* event) {
                auto& nobj = m_scene->copyObject(*obj);
                rebuild();
                for (auto& item: m_items) {
-                  if (item->data(0, Qt::UserRole).value<QUuid>() == nobj.id()) {
+                  if (item->data(0, Qt::UserRole).value<QUuid>()
+                      == nobj.id()) {
                      item->setSelected(true);
-                     emit objectSelected(*m_scene->findObject(nobj.id()));
-                  } else {
-                     item->setSelected(false);
-                  }
+                     emit objectSelected(
+                           *m_scene->findObject(nobj.id()));
+                  } else { item->setSelected(false); }
                }
                emit sceneChanged();
             });
@@ -183,15 +175,16 @@ bool SceneBrowser::eventFilter(QObject* watched, QEvent* event) {
                auto nobj = Object::create(*m_scene);
                auto nobjID = nobj->id();
                m_scene->addObject(std::move(nobj));
-               m_scene->addChild(*obj, *m_scene->findObject(nobjID).value());
+               m_scene->addChild(
+                     *obj, *m_scene->findObject(nobjID).value());
                rebuild();
                for (auto& item: m_items) {
-                  if (item->data(0, Qt::UserRole).value<QUuid>() == nobjID) {
+                  if (item->data(0, Qt::UserRole).value<QUuid>()
+                      == nobjID) {
                      item->setSelected(true);
-                     emit objectSelected(*m_scene->findObject(nobjID));
-                  } else {
-                     item->setSelected(false);
-                  }
+                     emit objectSelected(
+                           *m_scene->findObject(nobjID));
+                  } else { item->setSelected(false); }
                }
                emit sceneChanged();
             });
@@ -202,19 +195,21 @@ bool SceneBrowser::eventFilter(QObject* watched, QEvent* event) {
                m_scene->addObject(std::move(obj));
                rebuild();
                for (auto& item: m_items) {
-                  if (item->data(0, Qt::UserRole).value<QUuid>() == objID) {
+                  if (item->data(0, Qt::UserRole).value<QUuid>()
+                      == objID) {
                      item->setSelected(true);
-                     emit objectSelected(*m_scene->findObject(objID));
-                  } else {
-                     item->setSelected(false);
-                  }
+                     emit objectSelected(
+                           *m_scene->findObject(objID));
+                  } else { item->setSelected(false); }
                }
                emit sceneChanged();
             });
          }
 
          menu.addAction("Import", [this] {
-            auto path = QFileDialog::getOpenFileName(this, "Import", QString(), "Model Object (*.*)");
+            auto path = QFileDialog::getOpenFileName(
+                  this, "Import", QString(),
+                  "Model Object (*.*)");
             if (path.isEmpty()) return;
             AssimpImporter::loadInto(path, *m_scene);
             rebuild();
@@ -280,7 +275,9 @@ void SceneBrowser::handleDropEvent(QDropEvent* event) {
 
          if (m_ui->list->indexOfTopLevelItem(droppedItem) > 0) {
             if (const auto* lastItemBeforeOurs = lastItemBefore(droppedItem)) {
-               newOrder = (*m_scene->findObject(lastItemBeforeOurs->data(0, Qt::UserRole).value<QUuid>()))->order() + 1;
+               newOrder = (*m_scene->findObject(
+                                lastItemBeforeOurs->data(0, Qt::UserRole).value<QUuid>()))->order()
+                          + 1;
             }
          }
 
@@ -316,10 +313,10 @@ void SceneBrowser::handleDropEvent(QDropEvent* event) {
 
          if (const auto* lastItemBeforeOurs = lastItemBefore(droppedItem)) {
             // it must have an item before because it has a parent!
-            newOrder = (*m_scene->findObject(lastItemBeforeOurs->data(0, Qt::UserRole).value<QUuid>()))->order() + 1;
-         } else {
-            qFatal() << "Couldn't find last item before dropped item";
-         }
+            newOrder = (*m_scene->findObject(
+                             lastItemBeforeOurs->data(0, Qt::UserRole).value<QUuid>()))->order() +
+                       1;
+         } else { qFatal() << "Couldn't find last item before dropped item"; }
 
          auto& droppedObjTrans = (*droppedObject)->getComponent<TransformComponent>();
          auto localTrans = droppedObjTrans.fromGlobal(droppedObjGlobalTrans);
@@ -341,10 +338,9 @@ void SceneBrowser::handleDropEvent(QDropEvent* event) {
       // close gaps
       uint64_t order = 0;
       auto orderedObjects = m_scene->objects();
-      std::ranges::sort(orderedObjects, [](Object* a, Object* b) { return a->order() < b->order(); });
-      for (auto* obj: orderedObjects) {
-         obj->setOrder(order++);
-      }
+      std::ranges::sort(orderedObjects,
+                        [](Object* a, Object* b) { return a->order() < b->order(); });
+      for (auto* obj: orderedObjects) { obj->setOrder(order++); }
 
       rebuild();
       emit sceneChanged();

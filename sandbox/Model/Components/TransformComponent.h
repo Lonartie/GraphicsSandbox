@@ -1,6 +1,7 @@
 #pragma once
 #include "Component.h"
 #include "Model/Hierarchy/Object.h"
+#include "ComponentsRegistry.h"
 #include <QQuaternion>
 #include <QVector3D>
 #include <QDebug>
@@ -15,6 +16,7 @@ struct TransformComponent : Component {
    QVector3D scale = QVector3D(1, 1, 1);
 
    QJsonObject toJson() const override {
+      REG_ASSERT(ComponentsRegistry<TransformComponent>::ComponentTypeRegistered);
       QJsonObject json;
       json["position"] = QJsonArray{position.x(), position.y(), position.z()};
       json["rotation"] = QJsonArray{rotation.scalar(), rotation.x(), rotation.y(), rotation.z()};
@@ -26,7 +28,8 @@ struct TransformComponent : Component {
       auto pos = json["position"].toArray();
       position = QVector3D(pos[0].toDouble(), pos[1].toDouble(), pos[2].toDouble());
       auto rot = json["rotation"].toArray();
-      rotation = QQuaternion(rot[0].toDouble(), rot[1].toDouble(), rot[2].toDouble(), rot[3].toDouble());
+      rotation = QQuaternion(rot[0].toDouble(), rot[1].toDouble(), rot[2].toDouble(),
+                             rot[3].toDouble());
       auto sca = json["scale"].toArray();
       scale = QVector3D(sca[0].toDouble(), sca[1].toDouble(), sca[2].toDouble());
    }
@@ -38,7 +41,8 @@ struct TransformComponent : Component {
       defaultMatrix.scale(QVector3D(1, 1, 1));
 
       QMatrix4x4 parentModel = hasParent() && parent().parent()
-                                  ? (*parent().parent())->getComponent<TransformComponent>().modelMatrix()
+                                  ? (*parent().parent())->getComponent<TransformComponent>().
+                                  modelMatrix()
                                   : defaultMatrix;
 
       QMatrix4x4 model;
@@ -49,9 +53,7 @@ struct TransformComponent : Component {
       return parentModel * model;
    }
 
-   TransformComponent toGlobal() const {
-      return FromMatrix(modelMatrix());
-   }
+   TransformComponent toGlobal() const { return FromMatrix(modelMatrix()); }
 
    TransformComponent fromGlobal(const TransformComponent& global) const {
       if (!hasParent() || !parent().parent()) return global;
@@ -101,7 +103,8 @@ inline QDataStream& operator>>(QDataStream& stream, TransformComponent& transfor
 }
 
 inline QDebug& operator<<(QDebug& dbg, const TransformComponent& transform) {
-   dbg << "TransformComponent(" << transform.position << ", " << transform.rotation << ", " << transform.scale << ")";
+   dbg << "TransformComponent(" << transform.position << ", " << transform.rotation << ", " <<
+         transform.scale << ")";
    return dbg;
 }
 

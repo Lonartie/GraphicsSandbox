@@ -13,6 +13,7 @@ public:
    static inline QString Name = "OpenGLView";
 
    explicit OpenGLView(QWidget* parent = nullptr);
+
    ~OpenGLView() override;
 
    [[nodiscard]] QWidget* asWidget() override;
@@ -22,18 +23,23 @@ signals:
 
 public slots:
    void setScene(Scene* scene) override;
+
    void disableLiveUpdates();
+
    void enableInspectionCamera();
 
 protected:
    void initializeGL() override;
+
    void resizeGL(int w, int h) override;
+
    void paintGL() override;
 
    bool eventFilter(QObject* watched, QEvent* event) override;
 
 private:
    void enableEditorCam(bool enable);
+
    bool editorEnabled() const;
 
 private:
@@ -48,8 +54,10 @@ private:
    QVector2D m_rotation;
    QPoint m_lastMousePos;
    QTimer m_movementTimer;
+   QTimer m_updateTimer;
    CameraComponent m_editorCam = CameraComponent(nullptr);
    TransformComponent m_editorTrans = TransformComponent(nullptr);
    bool m_live = true;
+   bool m_dirty = true;
    bool m_inspectionCamera = false;
 };

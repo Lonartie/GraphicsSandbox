@@ -1,6 +1,7 @@
 #pragma once
 #include "Component.h"
 #include "TransformComponent.h"
+#include "ComponentsRegistry.h"
 #include <QColor>
 #include <QRectF>
 #include <array>
@@ -10,16 +11,18 @@ struct CameraComponent : Component {
 
    using Component::Component;
 
-   QRectF viewport = QRectF(0,0,1,1); // shall be between 0 and 1
+   QRectF viewport = QRectF(0, 0, 1, 1);// shall be between 0 and 1
    float fov = 45.0f;
    float nearClip = 0.1f;
    float farClip = 1000.0f;
    bool wireframe = false;
-   QColor backgroundColor = QColor(0,0,0);
+   QColor backgroundColor = QColor(0, 0, 0);
 
    QJsonObject toJson() const override {
+      REG_ASSERT(ComponentsRegistry<CameraComponent>::ComponentTypeRegistered);
       QJsonObject json;
-      json["viewport"] = QJsonArray{viewport.x(), viewport.y(), viewport.width(), viewport.height()};
+      json["viewport"] = QJsonArray{viewport.x(), viewport.y(), viewport.width(),
+                                    viewport.height()};
       json["fov"] = fov;
       json["nearClip"] = nearClip;
       json["farClip"] = farClip;

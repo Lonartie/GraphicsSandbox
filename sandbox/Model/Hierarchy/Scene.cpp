@@ -29,17 +29,21 @@ namespace {
       scale.setY(matrix.column(1).toVector3D().length());
       scale.setZ(matrix.column(2).toVector3D().length());
       QMatrix3x3 rotMat;
-      rotMat(0, 0) = matrix(0, 0) / scale.x(); rotMat(0, 1) = matrix(0, 1) / scale.y(); rotMat(0, 2) = matrix(0, 2) / scale.z();
-      rotMat(1, 0) = matrix(1, 0) / scale.x(); rotMat(1, 1) = matrix(1, 1) / scale.y(); rotMat(1, 2) = matrix(1, 2) / scale.z();
-      rotMat(2, 0) = matrix(2, 0) / scale.x(); rotMat(2, 1) = matrix(2, 1) / scale.y(); rotMat(2, 2) = matrix(2, 2) / scale.z();
+      rotMat(0, 0) = matrix(0, 0) / scale.x();
+      rotMat(0, 1) = matrix(0, 1) / scale.y();
+      rotMat(0, 2) = matrix(0, 2) / scale.z();
+      rotMat(1, 0) = matrix(1, 0) / scale.x();
+      rotMat(1, 1) = matrix(1, 1) / scale.y();
+      rotMat(1, 2) = matrix(1, 2) / scale.z();
+      rotMat(2, 0) = matrix(2, 0) / scale.x();
+      rotMat(2, 1) = matrix(2, 1) / scale.y();
+      rotMat(2, 2) = matrix(2, 2) / scale.z();
       rot = QQuaternion::fromRotationMatrix(rotMat);
       return {pos, rot, scale};
    }
 }
 
-uptr<Scene> Scene::createEmpty() {
-   return uptr<Scene>(new Scene());
-}
+uptr<Scene> Scene::createEmpty() { return uptr<Scene>(new Scene()); }
 
 uptr<Scene> Scene::createFromJson(const QJsonObject& json) {
    uptr<Scene> scene(new Scene());
@@ -65,6 +69,7 @@ uptr<Scene> Scene::createFromJson(const QJsonObject& json) {
       }
    }
 
+   qDebug() << "There are " << GlobalComponentsRegistry::Deserializers().size() << " deserializers";
    GlobalComponentsRegistry::FromJson(regSetter, json["components"].toObject(), objectGetter);
    AssetProvider::instance().fromJson(json["assets"].toObject());
 
@@ -72,23 +77,17 @@ uptr<Scene> Scene::createFromJson(const QJsonObject& json) {
 }
 
 QJsonObject Scene::toJson() const {
-   auto getter = [this](QString name) {
-      return m_componentsRegistrar.at(name);
-   };
+   auto getter = [this](QString name) { return m_componentsRegistrar.at(name); };
 
    QJsonObject json;
    QJsonArray objects;
-   for (const auto& obj: m_objects) {
-      objects.append(obj->toJson());
-   }
+   for (const auto& obj: m_objects) { objects.append(obj->toJson()); }
    json["objects"] = objects;
    json["components"] = GlobalComponentsRegistry::ToJson(getter);
    QJsonObject childrenObject;
    for (const auto& [parent, children]: m_children) {
       QJsonArray childrenArray;
-      for (const auto& child: children) {
-         childrenArray.append(child.toString());
-      }
+      for (const auto& child: children) { childrenArray.append(child.toString()); }
       childrenObject[parent.toString()] = childrenArray;
    }
    json["children"] = childrenObject;
@@ -102,16 +101,12 @@ void Scene::addObject(uptr<Object> obj) {
 }
 
 void Scene::removeObject(Object& obj) {
-   for (auto* child: std::vector(obj.children())) {
-      this->removeObject(*child);
-   }
+   for (auto* child: std::vector(obj.children())) { this->removeObject(*child); }
    auto it = std::find_if(m_objects.begin(), m_objects.end(), [&obj](const uptr<Object>& o) {
       return o.get() == &obj;
    });
 
-   if (it != m_objects.end()) {
-      m_objects.erase(it);
-   }
+   if (it != m_objects.end()) { m_objects.erase(it); }
 }
 
 std::optional<const Object*> Scene::findObject(const QString& name) const {
@@ -119,9 +114,7 @@ std::optional<const Object*> Scene::findObject(const QString& name) const {
       return obj->name() == name;
    });
 
-   if (it != m_objects.end()) {
-      return it->get();
-   }
+   if (it != m_objects.end()) { return it->get(); }
 
    return std::nullopt;
 }
@@ -131,9 +124,7 @@ std::optional<Object*> Scene::findObject(const QString& name) {
       return obj->name() == name;
    });
 
-   if (it != m_objects.end()) {
-      return it->get();
-   }
+   if (it != m_objects.end()) { return it->get(); }
 
    return std::nullopt;
 }
@@ -143,9 +134,7 @@ std::optional<const Object*> Scene::findObject(QUuid id) const {
       return obj->id() == id;
    });
 
-   if (it != m_objects.end()) {
-      return it->get();
-   }
+   if (it != m_objects.end()) { return it->get(); }
 
    return std::nullopt;
 }
@@ -155,39 +144,29 @@ std::optional<Object*> Scene::findObject(QUuid id) {
       return obj && obj->id() == id;
    });
 
-   if (it != m_objects.end()) {
-      return it->get();
-   }
+   if (it != m_objects.end()) { return it->get(); }
 
    return std::nullopt;
 }
 
 std::vector<const Object*> Scene::objects() const {
    std::vector<const Object*> objs;
-   for (const auto& obj: m_objects) {
-      objs.push_back(obj.get());
-   }
+   for (const auto& obj: m_objects) { objs.push_back(obj.get()); }
    return objs;
 }
 
 std::vector<Object*> Scene::objects() {
    std::vector<Object*> objs;
-   for (const auto& obj: m_objects) {
-      objs.push_back(obj.get());
-   }
+   for (const auto& obj: m_objects) { objs.push_back(obj.get()); }
    return objs;
 }
 
 void Scene::unregister(Object* obj) {
    auto getter = [this](QString name) {
-      if (m_componentsRegistrar.find(name) == m_componentsRegistrar.end()) {
-         return sptr<void>();
-      }
+      if (m_componentsRegistrar.find(name) == m_componentsRegistrar.end()) { return sptr<void>(); }
       return m_componentsRegistrar.at(name);
    };
-   for (auto& deletor: GlobalComponentsRegistry::Deletors()) {
-      deletor(getter, obj->id());
-   }
+   for (auto& deletor: GlobalComponentsRegistry::Deletors()) { deletor(getter, obj->id()); }
 }
 
 Scene::~Scene() {
@@ -221,17 +200,14 @@ Object& Scene::copyObject(const Object& obj) {
 }
 
 void Scene::addChild(Object& parent, Object& child) {
-   if (auto oldParent = parentOf(child))
-      removeChild(**oldParent, child);
+   if (auto oldParent = parentOf(child)) removeChild(**oldParent, child);
 
    m_children[parent.id()].push_back(child.id());
 }
 
 void Scene::removeChild(Object& parent, Object& child) {
    auto iter = std::ranges::find(m_children[parent.id()], child.id());
-   if (iter != m_children[parent.id()].end()) {
-      m_children[parent.id()].erase(iter);
-   }
+   if (iter != m_children[parent.id()].end()) { m_children[parent.id()].erase(iter); }
 }
 
 std::optional<Object*> Scene::parentOf(const Object& child) {
@@ -247,9 +223,7 @@ std::vector<Object*> Scene::childrenOf(const Object& parent) {
    std::vector<Object*> children;
    if (m_children.find(parent.id()) == m_children.end()) return children;
    for (const auto& id: m_children[parent.id()]) {
-      if (auto child = findObject(id)) {
-         children.push_back(child.value());
-      }
+      if (auto child = findObject(id)) { children.push_back(child.value()); }
    }
    return children;
 }
@@ -264,7 +238,8 @@ std::vector<Object*> Scene::allChildrenOf(const Object& parent) {
       for (const auto& child: newChildlrenCopy) {
          auto newChildrenOfChild = childrenOf(*child);
          children.insert(children.end(), newChildrenOfChild.begin(), newChildrenOfChild.end());
-         newChildren.insert(newChildren.end(), newChildrenOfChild.begin(), newChildrenOfChild.end());
+         newChildren.insert(newChildren.end(), newChildrenOfChild.begin(),
+                            newChildrenOfChild.end());
       }
    }
 

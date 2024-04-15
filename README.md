@@ -1,10 +1,10 @@
 # Graphics Sandbox
 
 - [Graphics Sandbox](#graphics-sandbox)
-  - [About](#about)
-  - [Installation](#installation)
-  - [Features](#features)
-  - [TODOs](#todos)
+    - [About](#about)
+    - [Installation](#installation)
+    - [Features](#features)
+    - [TODOs](#todos)
 
 ## About
 

@@ -1,6 +1,7 @@
 #pragma once
 #include "Component.h"
 #include "Common/AssetProvider.h"
+#include "ComponentsRegistry.h"
 #include <QBuffer>
 #include <QColor>
 #include <QImage>
@@ -26,14 +27,10 @@ struct MaterialComponent : Component {
          QJsonObject json;
          json["type"] = type;
          if (type == "bool") json["value"] = value.toBool();
-         else if (type == "int")
-            json["value"] = value.toInt();
-         else if (type == "float")
-            json["value"] = value.toFloat();
-         else if (type == "QImage")
-            json["value"] = QString::number(value.value<uint64_t>());
-         else if (type == "QColor")
-            json["value"] = value.value<QColor>().name();
+         else if (type == "int") json["value"] = value.toInt();
+         else if (type == "float") json["value"] = value.toFloat();
+         else if (type == "QImage") json["value"] = QString::number(value.value<uint64_t>());
+         else if (type == "QColor") json["value"] = value.value<QColor>().name();
          else if (type == "QVector2D") {
             auto vec = value.value<QVector2D>();
             json["value"] = QJsonArray{vec.x(), vec.y()};
@@ -51,14 +48,10 @@ struct MaterialComponent : Component {
          Property prop;
          prop.type = json["type"].toString();
          if (prop.type == "bool") prop.value = json["value"].toBool();
-         else if (prop.type == "int")
-            prop.value = json["value"].toInt();
-         else if (prop.type == "float")
-            prop.value = json["value"].toDouble();
-         else if (prop.type == "QImage")
-            prop.value = json["value"].toString().toULongLong();
-         else if (prop.type == "QColor")
-            prop.value = QColor(json["value"].toString());
+         else if (prop.type == "int") prop.value = json["value"].toInt();
+         else if (prop.type == "float") prop.value = json["value"].toDouble();
+         else if (prop.type == "QImage") prop.value = json["value"].toString().toULongLong();
+         else if (prop.type == "QColor") prop.value = QColor(json["value"].toString());
          else if (prop.type == "QVector2D") {
             auto arr = json["value"].toArray();
             prop.value = QVector2D(arr[0].toDouble(), arr[1].toDouble());
@@ -77,11 +70,10 @@ struct MaterialComponent : Component {
    std::map<QString, Property> properties;
 
    QJsonObject toJson() const override {
+      REG_ASSERT(ComponentsRegistry<MaterialComponent>::ComponentTypeRegistered);
       QJsonObject json;
       json["shader"] = QJsonValue::fromVariant(shader);
-      for (auto& [name, prop]: properties) {
-         json[name] = prop.toJson();
-      }
+      for (auto& [name, prop]: properties) { json[name] = prop.toJson(); }
       return json;
    }
 
@@ -109,17 +101,22 @@ struct MaterialComponent : Component {
    void bind(QOpenGLShaderProgram* program) override {
       int texID = 0;
       for (auto& [name, prop]: properties) {
-         if (prop.type == "bool") program->setUniformValue(name.toStdString().c_str(), prop.value.toBool());
+         if (prop.type == "bool")
+            program->setUniformValue(name.toStdString().c_str(),
+                                     prop.value.toBool());
          else if (prop.type == "int")
-            program->setUniformValue(name.toStdString().c_str(), prop.value.toInt());
+            program->setUniformValue(
+                  name.toStdString().c_str(), prop.value.toInt());
          else if (prop.type == "float")
-            program->setUniformValue(name.toStdString().c_str(), prop.value.toFloat());
+            program->setUniformValue(
+                  name.toStdString().c_str(), prop.value.toFloat());
          else if (prop.type == "QImage") {
             const auto id = prop.value.toULongLong();
             AssetProvider::instance().bind<QImage>(id, texID);
             program->setUniformValue(name.toStdString().c_str(), texID++);
          } else if (prop.type == "QColor")
-            program->setUniformValue(name.toStdString().c_str(), prop.value.value<QColor>());
+            program->setUniformValue(
+                  name.toStdString().c_str(), prop.value.value<QColor>());
          else if (prop.type == "QVector2D") {
             auto vec = prop.value.value<QVector2D>();
             program->setUniformValue(name.toStdString().c_str(), vec);

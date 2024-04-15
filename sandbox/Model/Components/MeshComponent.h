@@ -2,6 +2,7 @@
 
 #include "Common/Common.h"
 #include "Component.h"
+#include "ComponentsRegistry.h"
 #include <QVector3D>
 #include <tuple>
 #include <unordered_map>
@@ -20,6 +21,7 @@ struct MeshComponent : Component {
    std::vector<uint16_t> indices;
 
    QJsonObject toJson() const override {
+      REG_ASSERT(ComponentsRegistry<MeshComponent>::ComponentTypeRegistered);
       QJsonObject json;
 
       // vertices
@@ -33,9 +35,7 @@ struct MeshComponent : Component {
 
       // uvs
       QJsonArray uvsArray;
-      for (auto& uv: uvs) {
-         uvsArray.append(QJsonArray{uv.x(), uv.y()});
-      }
+      for (auto& uv: uvs) { uvsArray.append(QJsonArray{uv.x(), uv.y()}); }
       json["uvs"] = uvsArray;
 
       // normals
@@ -47,9 +47,7 @@ struct MeshComponent : Component {
 
       // indices
       QJsonArray indicesArray;
-      for (auto& index: indices) {
-         indicesArray.append(index);
-      }
+      for (auto& index: indices) { indicesArray.append(index); }
       json["indices"] = indicesArray;
 
       return json;
@@ -60,7 +58,8 @@ struct MeshComponent : Component {
       for (auto vertex: verticesArray) {
          auto vertexObj = vertex.toObject();
          auto position = vertexObj["position"].toArray();
-         vertices.push_back(QVector3D(position[0].toDouble(), position[1].toDouble(), position[2].toDouble()));
+         vertices.push_back(QVector3D(position[0].toDouble(), position[1].toDouble(),
+                                      position[2].toDouble()));
       }
 
       auto uvsArray = json["uvs"].toArray();
@@ -72,13 +71,12 @@ struct MeshComponent : Component {
       auto normalsArray = json["normals"].toArray();
       for (auto normal: normalsArray) {
          auto normalArray = normal.toArray();
-         normals.push_back(QVector3D(normalArray[0].toDouble(), normalArray[1].toDouble(), normalArray[2].toDouble()));
+         normals.push_back(QVector3D(normalArray[0].toDouble(), normalArray[1].toDouble(),
+                                     normalArray[2].toDouble()));
       }
 
       auto indicesArray = json["indices"].toArray();
-      for (auto index: indicesArray) {
-         indices.push_back(index.toInt());
-      }
+      for (auto index: indicesArray) { indices.push_back(index.toInt()); }
    }
 
    void prepare(QOpenGLShaderProgram* program) override {
@@ -134,29 +132,21 @@ struct MeshComponent : Component {
          m_vertexBuffer->bind();
          program->enableAttributeArray("worldPos");
          program->setAttributeBuffer("worldPos", GL_FLOAT, 0, 3, sizeof(QVector3D));
-      } else {
-         program->disableAttributeArray("worldPos");
-      }
+      } else { program->disableAttributeArray("worldPos"); }
 
       if (m_uvBuffer) {
          m_uvBuffer->bind();
          program->enableAttributeArray("worldUV");
          program->setAttributeBuffer("worldUV", GL_FLOAT, 0, 2, sizeof(QVector2D));
-      } else {
-         program->disableAttributeArray("worldUV");
-      }
+      } else { program->disableAttributeArray("worldUV"); }
 
       if (m_normalBuffer) {
          m_normalBuffer->bind();
          program->enableAttributeArray("worldNormal");
          program->setAttributeBuffer("worldNormal", GL_FLOAT, 0, 3, sizeof(QVector3D));
-      } else {
-         program->disableAttributeArray("worldNormal");
-      }
+      } else { program->disableAttributeArray("worldNormal"); }
 
-      if (m_indexBuffer) {
-         m_indexBuffer->bind();
-      }
+      if (m_indexBuffer) { m_indexBuffer->bind(); }
    }
 
    void release(QOpenGLShaderProgram* program) override {
@@ -166,13 +156,9 @@ struct MeshComponent : Component {
       if (m_indexBuffer) m_indexBuffer->release();
    }
 
-   auto asTuple() {
-      return std::tie(vertices, uvs, normals, indices);
-   }
+   auto asTuple() { return std::tie(vertices, uvs, normals, indices); }
 
-   auto asTuple() const {
-      return std::tie(vertices, uvs, normals, indices);
-   }
+   auto asTuple() const { return std::tie(vertices, uvs, normals, indices); }
 
    ~MeshComponent() override {
       delete m_vertexBuffer;
@@ -189,15 +175,15 @@ private:
 };
 
 using primitive_t = std::tuple<
-      std::vector<QVector3D>,
-      std::vector<QVector2D>,
-      std::vector<uint16_t>>;
+   std::vector<QVector3D>,
+   std::vector<QVector2D>,
+   std::vector<uint16_t> >;
 
 using primitive_normals_t = std::tuple<
-      std::vector<QVector3D>,
-      std::vector<QVector2D>,
-      std::vector<QVector3D>,
-      std::vector<uint16_t>>;
+   std::vector<QVector3D>,
+   std::vector<QVector2D>,
+   std::vector<QVector3D>,
+   std::vector<uint16_t> >;
 
 static primitive_t cube_primitive_data = {
       {
@@ -256,9 +242,9 @@ static primitive_t cube_primitive_data = {
       },
       {
             // indices
-            0, 1, 2, 2, 3, 0,      // front
-            4, 5, 6, 6, 7, 4,      // back
-            8, 9, 10, 10, 11, 8,   // left
+            0, 1, 2, 2, 3, 0,// front
+            4, 5, 6, 6, 7, 4,// back
+            8, 9, 10, 10, 11, 8,// left
             12, 13, 14, 14, 15, 12,// right
             16, 17, 18, 18, 19, 16,// top
             20, 21, 22, 22, 23, 20,// bottom
@@ -315,10 +301,10 @@ static primitive_t pyramid_primitive_data = {
       {
             // indices
             0, 1, 2, 2, 3, 0,// bottom
-            6, 5, 4,         // front
-            9, 8, 7,         // right
-            12, 11, 10,      // back
-            15, 14, 13,      // left
+            6, 5, 4,// front
+            9, 8, 7,// right
+            12, 11, 10,// back
+            15, 14, 13,// left
       }};
 
 static inline primitive_normals_t to_normals(primitive_t data) {
@@ -343,6 +329,6 @@ static inline primitive_normals_t to_normals(primitive_t data) {
    return result;
 }
 
-static std::unordered_map<QString, primitive_normals_t, QtHasher<QString>> primitives = {
+static std::unordered_map<QString, primitive_normals_t, QtHasher<QString> > primitives = {
       {"cube", to_normals(cube_primitive_data)},
       {"pyramid", to_normals(pyramid_primitive_data)}};
