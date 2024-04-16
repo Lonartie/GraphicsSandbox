@@ -111,9 +111,7 @@ void OpenGLView::setScene(Scene* scene) {
 bool OpenGLView::eventFilter(QObject* watched, QEvent* ev) {
    if (ev->type() == QEvent::KeyPress) {
       auto event = dynamic_cast<QKeyEvent*>(ev);
-      if (event->isAutoRepeat()){
-         return false;
-      }
+      if (event->isAutoRepeat()) { return false; }
       auto key = event->key();
       switch (key) {
          case Qt::Key_0:
