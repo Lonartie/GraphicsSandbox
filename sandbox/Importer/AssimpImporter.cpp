@@ -59,7 +59,9 @@ QUuid AssimpImporter::loadInto(const QString& path, Scene& scene) {
       }
    }
 
-   return importNode(root, assimpScene->mRootNode, assimpScene, scene, aiMatrix4x4());
+   auto id = importNode(root, assimpScene->mRootNode, assimpScene, scene, aiMatrix4x4());
+   GS_DEBUG() << "Imported" << OBJECT_COUNT << "objects and " << LOADED.size() << "images";
+   return id;
 }
 
 QUuid importNode(
@@ -108,7 +110,7 @@ QUuid createObject(
    auto obj = Object::create(scene);
    obj->setName(QString::fromStdString(assimpNode->mName.C_Str()));
    auto& trans = obj->getComponent<TransformComponent>();
-   qDebug() << "Added object #" << ++OBJECT_COUNT;
+   OBJECT_COUNT++;
 
    if (transform) {
       aiVector3D position, scaling;
@@ -172,7 +174,6 @@ QUuid createObject(
                MaterialComponent::Property{
                   .type = "QImage", .value = albedoMaps.at(0)
                });
-            qDebug() << "Added image #" << ++IMAGE_COUNT;
 
             std::vector<uint64_t> normalMaps = loadMaterialTextures(root, material, aiTextureType_HEIGHT, assimpScene);
             if (!normalMaps.empty()) {
@@ -181,7 +182,6 @@ QUuid createObject(
                   MaterialComponent::Property{
                      .type = "QImage", .value = normalMaps.at(0)
                   });
-               qDebug() << "Added image #" << ++IMAGE_COUNT;
             }
          }
       }
@@ -208,14 +208,14 @@ static std::vector<uint64_t> loadMaterialTextures(const QDir& root,
       QImageReader reader(path);
       QImage image = reader.read();
       if (image.isNull()) {
-         qDebug() << "Failed to load texture:" << reader.errorString();
-         qDebug() << "Trying to load a PNG variant";
+         GS_DEBUG() << "Failed to load texture:" << reader.errorString();
+         GS_DEBUG() << "Trying to load a PNG variant";
          QFileInfo info(path);
          auto pngPath = root.absoluteFilePath(info.baseName() + ".png");
          QImageReader pngReader(pngPath);
          image = pngReader.read();
          if (image.isNull()) {
-            qDebug() << "Failed to load PNG texture:" << pngReader.errorString();
+            GS_DEBUG() << "Failed to load PNG texture:" << pngReader.errorString();
          } else {
             LOADED.emplace(path, AssetProvider::instance().add<QImage>(std::move(image)));
             result.push_back(LOADED.at(path));

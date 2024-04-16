@@ -16,10 +16,13 @@ ShaderProvider::ShaderProvider() {
    connect(&m_watcher, &QFileSystemWatcher::directoryChanged, this, &ShaderProvider::dirChanged);
    connect(&m_watcher, &QFileSystemWatcher::fileChanged, this, &ShaderProvider::fileChanged);
 
+   std::vector<QString> shaderNames;
    for (auto& shader: subDirs(ShadersLocation)) {
       const auto name = QDir(shader).dirName();
+      shaderNames.push_back(name);
       invalidateShader(name);
    }
+   GS_DEBUG() << "Loaded shaders:" << shaderNames;
 }
 
 QStringList ShaderProvider::allContents(const QString& location) {
@@ -66,10 +69,13 @@ void ShaderProvider::dirChanged(const QString& path) {
    if (QDir(path).canonicalPath() == QDir(ShadersLocation).canonicalPath()) {
       // invalidate all shaders
       m_emitShaderChanged = false;
+      std::vector<QString> shaderNames;
       for (auto& shader: subDirs(ShadersLocation)) {
          const auto name = QDir(shader).dirName();
+         shaderNames.push_back(name);
          invalidateShader(name);
       }
+      GS_DEBUG() << "Loaded shaders:" << shaderNames;
       emit shadersChanged(getShaderNames());
       m_emitShaderChanged = true;
    } else {
@@ -88,16 +94,18 @@ void ShaderProvider::fileChanged(const QString& path) {
    auto fileDir = QFileInfo(path).dir();
    auto parentDir = fileDir;
    parentDir.cdUp();
+   std::vector<QString> shaderNames;
    if (parentDir.canonicalPath() == QDir(ShadersLocation).canonicalPath()) {
       // yes it is a shader
       const auto name = fileDir.dirName();
+      shaderNames.push_back(name);
       invalidateShader(name);
    }
+   GS_DEBUG() << "Loaded shaders:" << shaderNames;
 }
 
 void ShaderProvider::invalidateShader(const QString& name) {
    auto shader = new QOpenGLShaderProgram();
-
 
    auto files = subFiles(QString(ShadersLocation) + "/" + name);
    if (auto vertFile = getFileType(files, ".vert")) {
@@ -146,8 +154,6 @@ void ShaderProvider::invalidateShader(const QString& name) {
    if (m_emitShaderChanged) {
       emit shaderChanged(name, shader);
    }
-
-   qDebug() << "loaded " << name;
 }
 
 QStringList ShaderProvider::getShaderNames() const {

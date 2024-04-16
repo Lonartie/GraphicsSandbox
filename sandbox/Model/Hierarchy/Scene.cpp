@@ -69,7 +69,8 @@ uptr<Scene> Scene::createFromJson(const QJsonObject& json) {
       }
    }
 
-   qDebug() << "There are " << GlobalComponentsRegistry::Deserializers().size() << " deserializers";
+   GS_DEBUG() << "Found components:" << transform(GlobalComponentsRegistry::Serializers(),
+                                                   [](auto& pair) { return pair.first; });
    GlobalComponentsRegistry::FromJson(regSetter, json["components"].toObject(), objectGetter);
    AssetProvider::instance().fromJson(json["assets"].toObject());
 

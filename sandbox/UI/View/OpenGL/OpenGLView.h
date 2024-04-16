@@ -18,10 +18,14 @@ public:
 
    [[nodiscard]] QWidget* asWidget() override;
 
+   int fpsTarget() const override;
+
 signals:
    void timeChanged(float time, float renderTime);
 
 public slots:
+   void setFpsTarget(int target) override;
+
    void setScene(Scene* scene) override;
 
    void disableLiveUpdates();
@@ -59,5 +63,6 @@ private:
    TransformComponent m_editorTrans = TransformComponent(nullptr);
    bool m_live = true;
    bool m_dirty = true;
+   int m_fpsTarget = 60;
    bool m_inspectionCamera = false;
 };

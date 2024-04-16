@@ -22,6 +22,7 @@ private slots:
    void buildUI();
    void loadScene();
    void saveScene();
+   void buildFpsMenu();
 
 private:
    Ui::MainWindow* m_ui = nullptr;

@@ -24,6 +24,8 @@ public:
 
    [[nodiscard]] virtual QWidget* asWidget() = 0;
    virtual void setScene(Scene* scene) = 0;
+   virtual void setFpsTarget(int target) = 0;
+   virtual int fpsTarget() const = 0;
 };
 
 template<typename T>

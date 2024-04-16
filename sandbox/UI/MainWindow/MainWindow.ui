@@ -67,8 +67,14 @@
      <string>Styles</string>
     </property>
    </widget>
+   <widget class="QMenu" name="menuFPS">
+    <property name="title">
+     <string>FPS</string>
+    </property>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="styles"/>
+   <addaction name="menuFPS"/>
    <addaction name="renderer"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>

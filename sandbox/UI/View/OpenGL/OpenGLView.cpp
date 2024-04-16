@@ -3,8 +3,6 @@
 #include <QKeyEvent>
 #include <QOpenGLFunctions>
 
-constexpr auto FPS_TARGET = 60;
-
 [[maybe_unused]] static auto OpenGLViewReg = AutoRegisterView<OpenGLView>::registered;
 
 OpenGLView::OpenGLView(QWidget* parent)
@@ -18,7 +16,8 @@ OpenGLView::OpenGLView(QWidget* parent)
    installEventFilter(this);
    m_movementTimer.setInterval(1);
    m_movementTimer.start();
-   m_updateTimer.setInterval((int) (1000.0 / FPS_TARGET));
+   m_updateTimer.setTimerType(Qt::TimerType::PreciseTimer);
+   m_updateTimer.setInterval((int) (1000.0 / m_fpsTarget));
    connect(&m_movementTimer, &QTimer::timeout, this, [this] {
       if (editorEnabled() && !m_inspectionCamera) {
          const auto direction = m_movement.normalized();
@@ -39,6 +38,10 @@ OpenGLView::~OpenGLView() {
 
 QWidget* OpenGLView::asWidget() { return this; }
 
+int OpenGLView::fpsTarget() const {
+   return m_fpsTarget;
+}
+
 void OpenGLView::initializeGL() {
    m_renderer = new OpenGLRenderer(context());
    m_renderer->init();
@@ -55,10 +58,13 @@ void OpenGLView::initializeGL() {
 void OpenGLView::resizeGL(int w, int h) {
    auto scalingFactor = devicePixelRatio();
    m_renderer->resize(w * scalingFactor, h * scalingFactor);
-   QOpenGLWidget::resizeGL(w, h);
+   // QOpenGLWidget::resizeGL(w, h);
 }
 
 void OpenGLView::paintGL() {
+   if (m_fpsTarget > 0) m_updateTimer.setInterval((int) (1000.0 / m_fpsTarget));
+   else m_updateTimer.setInterval(0);
+
    if (!m_updateTimer.isActive()) { m_updateTimer.start(); }
    const auto before = std::chrono::high_resolution_clock::now();
    m_renderer->render();
@@ -74,6 +80,11 @@ void OpenGLView::paintGL() {
             std::chrono::duration_cast<std::chrono::microseconds>(now - before).count() / 1000.0f;
       emit timeChanged(durationMS, rawRenderTimeMS);
    }
+}
+
+void OpenGLView::setFpsTarget(int target) {
+   m_fpsTarget = target;
+   GS_DEBUG() << "FPS Target set to " << target;
 }
 
 void OpenGLView::setScene(Scene* scene) {

@@ -112,7 +112,7 @@ void OpenGLRenderer::resetLastStage() {
 }
 
 void OpenGLRenderer::setLastStage(int stage) {
-   qDebug() << "Set last stage: " << stage;
+   GS_DEBUG() << "Set last stage: " << stage;
    m_lastStage = stage;
 }
 

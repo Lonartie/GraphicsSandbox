@@ -4,10 +4,14 @@
 #include "ui_mainwindow.h"
 #include <QFileDialog>
 #include <QJsonDocument>
+#include <qscreen.h>
+#include <QWindow>
 #include <QStyleFactory>
 
 MainWindow::MainWindow(QWidget* parent)
-    : QMainWindow(parent), m_ui(new Ui::MainWindow) {
+   : QMainWindow(parent), m_ui(new Ui::MainWindow) {
+   setAttribute(Qt::WA_NativeWindow);
+
    m_ui->setupUi(this);
    buildUI();
 
@@ -28,9 +32,10 @@ MainWindow::MainWindow(QWidget* parent)
 
    QTimer::singleShot(0, [this] {
       // the instance may ne be created before the first window has been shown
-      connect(&ShaderProvider::instance(), &ShaderProvider::fileError, [this](const QString& file, const QString& error) {
-         m_ui->statusbar->showMessage(QString("Error in file %1: %2").arg(file).arg(error), 5000);
-      });
+      connect(&ShaderProvider::instance(), &ShaderProvider::fileError,
+              [this](const QString& file, const QString& error) {
+                 m_ui->statusbar->showMessage(QString("Error in file %1: %2").arg(file).arg(error), 5000);
+              });
    });
 
    if (QFile::exists("test/test.scene")) {
@@ -40,6 +45,9 @@ MainWindow::MainWindow(QWidget* parent)
       m_ui->sceneBrowser->setScene(m_scene.get());
       m_view->setScene(m_scene.get());
    }
+
+   buildFpsMenu();
+   connect(windowHandle(), &QWindow::screenChanged, this, &MainWindow::buildFpsMenu);
 }
 
 MainWindow::~MainWindow() {
@@ -58,7 +66,7 @@ void MainWindow::activateRenderer(const QString& name) {
    auto widget = m_view->asWidget();
    m_ui->tabs->addTab(widget, name);
    auto tab = m_ui->tabs->widget(0);
-   ((QGridLayout*)m_ui->centralwidget->layout())->setColumnStretch(1, 1);
+   ((QGridLayout*) m_ui->centralwidget->layout())->setColumnStretch(1, 1);
    tab->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
    widget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
    m_ui->tabs->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
@@ -66,9 +74,9 @@ void MainWindow::activateRenderer(const QString& name) {
    if (auto* openglView = dynamic_cast<OpenGLView*>(m_view)) {
       connect(openglView, &OpenGLView::timeChanged, [this](float time, float renderTime) {
          setWindowTitle(QString("SceneRenderer  Time: %1 ms FPS: %2 (Raw Render: %3 ms)")
-                              .arg(QString::number(time, 'g', 3))
-                                            .arg(1000.0f / time)
-                                            .arg(QString::number(renderTime, 'g', 3)));
+            .arg(QString::number(time, 'g', 3))
+            .arg(1000.0f / time)
+            .arg(QString::number(renderTime, 'g', 3)));
       });
    }
 
@@ -81,7 +89,7 @@ void MainWindow::activateRenderer(const QString& name) {
 }
 
 void MainWindow::buildUI() {
-   for (auto style : QStyleFactory::keys()) {
+   for (auto style: QStyleFactory::keys()) {
       auto* action = new QAction(style, this);
       connect(action, &QAction::triggered, [style] { QApplication::setStyle(style); });
       m_ui->styles->addAction(action);
@@ -129,4 +137,36 @@ void MainWindow::saveScene() {
    file.open(QIODevice::WriteOnly);
    file.write(QJsonDocument(m_scene->toJson()).toJson(QJsonDocument::JsonFormat::Compact));
    file.close();
+}
+
+void MainWindow::buildFpsMenu() {
+   m_ui->menuFPS->clear();
+
+   int currentScreenFps = window()->screen()->refreshRate();
+   auto addEntry = [&](int i) {
+      QString text = i == 0 ? "Unlimited" : QString::number(i);
+      if (i == currentScreenFps) {
+         text += " (Screen)";
+      }
+
+      auto* action = new QAction(text, this);
+      action->setCheckable(true);
+      action->setChecked(i == m_view->fpsTarget());
+      connect(action, &QAction::triggered, [this, i, action] {
+         m_view->setFpsTarget(i);
+         for (auto* child: m_ui->menuFPS->actions()) {
+            child->setChecked(child == action);
+         }
+      });
+      m_ui->menuFPS->addAction(action);
+   };
+
+   for (int i = 30; i <= (2 * currentScreenFps); i += 30) {
+      addEntry(i);
+      if (i < currentScreenFps && i + 30 > currentScreenFps) {
+         addEntry(currentScreenFps);
+      }
+   }
+
+   addEntry(0);
 }

@@ -250,7 +250,7 @@ void SceneBrowser::handleDropEvent(QDropEvent* event) {
       }
 
       if (!unseenItem) {
-         qDebug() << "Couldn't identify dropped item";
+         GS_DEBUG() << "Couldn't identify dropped item";
          return;
       }
 
@@ -259,7 +259,7 @@ void SceneBrowser::handleDropEvent(QDropEvent* event) {
       auto droppedObject = m_scene->findObject(droppedID);
 
       if (!droppedObject) {
-         qDebug() << "Couldn't find dropped object";
+         GS_DEBUG() << "Couldn't find dropped object";
          return;
       }
 
@@ -270,7 +270,7 @@ void SceneBrowser::handleDropEvent(QDropEvent* event) {
       auto droppedObjectOrder = (*droppedObject)->order();
       uint64_t newOrder = 0;
       if (!droppedItemParent) {
-         qDebug() << "Dropped object has no parent";
+         GS_DEBUG() << "Dropped object has no parent";
          (*droppedObject)->unsetParent();
 
          if (m_ui->list->indexOfTopLevelItem(droppedItem) > 0) {
@@ -289,13 +289,13 @@ void SceneBrowser::handleDropEvent(QDropEvent* event) {
          auto parentID = droppedItemParent->data(0, Qt::UserRole).value<QUuid>();
          auto parentObject = m_scene->findObject(parentID);
          if (!parentObject) {
-            qDebug() << "Couldn't find parent object";
+            GS_DEBUG() << "Couldn't find parent object";
             return;
          }
 
          // cycle detection
          if (droppedID == parentID) {
-            qDebug() << "Dropped onto itself, borting";
+            GS_DEBUG() << "Dropped onto itself, borting";
             rebuild();
             emit sceneChanged();
             return;
@@ -303,7 +303,7 @@ void SceneBrowser::handleDropEvent(QDropEvent* event) {
 
          auto allChildren = m_scene->allChildrenOf(**droppedObject);
          if (std::ranges::find(allChildren, *parentObject) != allChildren.end()) {
-            qDebug() << "Cycle detected, borting";
+            GS_DEBUG() << "Cycle detected, borting";
             rebuild();
             emit sceneChanged();
             return;
