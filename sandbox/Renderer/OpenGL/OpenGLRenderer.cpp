@@ -107,6 +107,10 @@ void OpenGLRenderer::resize(int w, int h) {
    m_height = h;
 }
 
+QSize OpenGLRenderer::size() const {
+   return QSize(m_width, m_height);
+}
+
 void OpenGLRenderer::resetLastStage() {
    setLastStage(std::numeric_limits<int>::max());
 }

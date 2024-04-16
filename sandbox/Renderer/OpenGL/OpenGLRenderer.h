@@ -22,6 +22,7 @@ public slots:
    void setScene(Scene* scene);
    void render();
    void resize(int w, int h);
+   QSize size() const;
 
    void resetLastStage();
    void setLastStage(int stage);

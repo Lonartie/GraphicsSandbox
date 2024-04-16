@@ -38,9 +38,7 @@ OpenGLView::~OpenGLView() {
 
 QWidget* OpenGLView::asWidget() { return this; }
 
-int OpenGLView::fpsTarget() const {
-   return m_fpsTarget;
-}
+int OpenGLView::fpsTarget() const { return m_fpsTarget; }
 
 void OpenGLView::initializeGL() {
    m_renderer = new OpenGLRenderer(context());
@@ -62,18 +60,36 @@ void OpenGLView::resizeGL(int w, int h) {
 }
 
 void OpenGLView::paintGL() {
+
+   // Start update timer if inactive
+   if (!m_updateTimer.isActive()) { m_updateTimer.start(); }
+
+   // Calculate pixel density scaling factor and OpenGL surface size
+   const auto scalingFactor = devicePixelRatio();
+   const auto glSize = QSize(width() * scalingFactor, height() * scalingFactor);
+
+   // Check if OpenGLRenderer size and surface size mismatch; if true, resize GL
+   if (m_renderer->size() != glSize) {
+      GS_DEBUG() << "Updated scaling factor to" << scalingFactor;
+      resizeGL(width(), height());
+   }
+
+   // Adjust timer interval based on FPS target
    if (m_fpsTarget > 0) m_updateTimer.setInterval((int) (1000.0 / m_fpsTarget));
    else m_updateTimer.setInterval(0);
 
-   if (!m_updateTimer.isActive()) { m_updateTimer.start(); }
+   // Capture timestamp before and after rendering to calculate render time
    const auto before = std::chrono::high_resolution_clock::now();
    m_renderer->render();
    const auto now = std::chrono::high_resolution_clock::now();
+
+   // Calculate render duration
    const auto durationMS =
          std::chrono::duration_cast<std::chrono::microseconds>(now - m_lastRenderTime).count() /
          1000.0f;
    m_lastRenderTime = now;
 
+   // Emit timeChanged signal if more than 500 milliseconds have passed
    if (now - m_lastTimeNotify > std::chrono::milliseconds(500)) {
       m_lastTimeNotify = now;
       const auto rawRenderTimeMS =
@@ -95,6 +111,9 @@ void OpenGLView::setScene(Scene* scene) {
 bool OpenGLView::eventFilter(QObject* watched, QEvent* ev) {
    if (ev->type() == QEvent::KeyPress) {
       auto event = dynamic_cast<QKeyEvent*>(ev);
+      if (event->isAutoRepeat()){
+         return false;
+      }
       auto key = event->key();
       switch (key) {
          case Qt::Key_0:

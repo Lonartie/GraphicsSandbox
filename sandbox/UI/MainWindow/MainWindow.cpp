@@ -26,15 +26,19 @@ MainWindow::MainWindow(QWidget* parent)
       m_view->setScene(m_scene.get());
    });
 
-   connect(m_ui->sceneBrowser, &SceneBrowser::objectSelected, m_ui->objectEditor, &ObjectEditor::setObject);
-   connect(m_ui->sceneBrowser, &SceneBrowser::sceneChanged, m_ui->objectEditor, &ObjectEditor::rebuild);
-   connect(m_ui->objectEditor, &ObjectEditor::objectChanged, m_ui->sceneBrowser, &SceneBrowser::rebuild);
+   connect(m_ui->sceneBrowser, &SceneBrowser::objectSelected, m_ui->objectEditor,
+           &ObjectEditor::setObject);
+   connect(m_ui->sceneBrowser, &SceneBrowser::sceneChanged, m_ui->objectEditor,
+           &ObjectEditor::rebuild);
+   connect(m_ui->objectEditor, &ObjectEditor::objectChanged, m_ui->sceneBrowser,
+           &SceneBrowser::rebuild);
 
    QTimer::singleShot(0, [this] {
       // the instance may ne be created before the first window has been shown
       connect(&ShaderProvider::instance(), &ShaderProvider::fileError,
               [this](const QString& file, const QString& error) {
-                 m_ui->statusbar->showMessage(QString("Error in file %1: %2").arg(file).arg(error), 5000);
+                 m_ui->statusbar->showMessage(QString("Error in file %1: %2").arg(file).arg(error),
+                                              5000);
               });
    });
 
@@ -46,13 +50,13 @@ MainWindow::MainWindow(QWidget* parent)
       m_view->setScene(m_scene.get());
    }
 
+   int currentScreenFps = window()->screen()->refreshRate();
+   m_view->setFpsTarget(currentScreenFps);
    buildFpsMenu();
    connect(windowHandle(), &QWindow::screenChanged, this, &MainWindow::buildFpsMenu);
 }
 
-MainWindow::~MainWindow() {
-   delete m_ui;
-}
+MainWindow::~MainWindow() { delete m_ui; }
 
 void MainWindow::activateRenderer(const QString& name) {
    // change widget
@@ -74,16 +78,14 @@ void MainWindow::activateRenderer(const QString& name) {
    if (auto* openglView = dynamic_cast<OpenGLView*>(m_view)) {
       connect(openglView, &OpenGLView::timeChanged, [this](float time, float renderTime) {
          setWindowTitle(QString("SceneRenderer  Time: %1 ms FPS: %2 (Raw Render: %3 ms)")
-            .arg(QString::number(time, 'g', 3))
-            .arg(1000.0f / time)
-            .arg(QString::number(renderTime, 'g', 3)));
+               .arg(QString::number(time, 'g', 3))
+               .arg(1000.0f / time)
+               .arg(QString::number(renderTime, 'g', 3)));
       });
    }
 
    // set correct action checked, uncheck others
-   for (auto action: m_ui->renderer->actions()) {
-      action->setChecked(action->text() == name);
-   }
+   for (auto action: m_ui->renderer->actions()) { action->setChecked(action->text() == name); }
 
    m_view->setScene(m_scene.get());
 }
@@ -98,9 +100,7 @@ void MainWindow::buildUI() {
    for (auto& name: ViewBase::getViewNames()) {
       auto action = new QAction(name, this);
       action->setCheckable(true);
-      if (name == "OpenGLView") {
-         action->setChecked(true);
-      }
+      if (name == "OpenGLView") { action->setChecked(true); }
       connect(action, &QAction::triggered, [this, name] { activateRenderer(name); });
       m_ui->renderer->addAction(action);
    }
@@ -112,9 +112,7 @@ void MainWindow::buildUI() {
 
 void MainWindow::loadScene() {
    auto filename = QFileDialog::getOpenFileName(this, "Open Scene", "", "Scene Files (*.scene)");
-   if (filename.isEmpty()) {
-      return;
-   }
+   if (filename.isEmpty()) { return; }
 
    QFile file(filename);
    file.open(QIODevice::ReadOnly);
@@ -129,9 +127,7 @@ void MainWindow::loadScene() {
 
 void MainWindow::saveScene() {
    auto filename = QFileDialog::getSaveFileName(this, "Save Scene", "", "Scene Files (*.scene)");
-   if (filename.isEmpty()) {
-      return;
-   }
+   if (filename.isEmpty()) { return; }
 
    QFile file(filename);
    file.open(QIODevice::WriteOnly);
@@ -142,30 +138,28 @@ void MainWindow::saveScene() {
 void MainWindow::buildFpsMenu() {
    m_ui->menuFPS->clear();
 
+   disconnect(windowHandle()->screen(), &QScreen::refreshRateChanged, this,
+              &MainWindow::buildFpsMenu);
+   connect(windowHandle()->screen(), &QScreen::refreshRateChanged, this, &MainWindow::buildFpsMenu);
+
    int currentScreenFps = window()->screen()->refreshRate();
    auto addEntry = [&](int i) {
       QString text = i == 0 ? "Unlimited" : QString::number(i);
-      if (i == currentScreenFps) {
-         text += " (Screen)";
-      }
+      if (i == currentScreenFps) { text += " (Screen)"; }
 
       auto* action = new QAction(text, this);
       action->setCheckable(true);
       action->setChecked(i == m_view->fpsTarget());
       connect(action, &QAction::triggered, [this, i, action] {
          m_view->setFpsTarget(i);
-         for (auto* child: m_ui->menuFPS->actions()) {
-            child->setChecked(child == action);
-         }
+         for (auto* child: m_ui->menuFPS->actions()) { child->setChecked(child == action); }
       });
       m_ui->menuFPS->addAction(action);
    };
 
    for (int i = 30; i <= (2 * currentScreenFps); i += 30) {
       addEntry(i);
-      if (i < currentScreenFps && i + 30 > currentScreenFps) {
-         addEntry(currentScreenFps);
-      }
+      if (i < currentScreenFps && i + 30 > currentScreenFps) { addEntry(currentScreenFps); }
    }
 
    addEntry(0);
