@@ -12,7 +12,7 @@ class Object : public QObject, std::enable_shared_from_this<Object> {
 public:
    friend class Scene;
 
-   virtual ~Object() override;
+   ~Object() override;
 
    static uptr<Object> create(Scene& parent);
    static uptr<Object> createFromJson(const QJsonObject& json, Scene& scene);

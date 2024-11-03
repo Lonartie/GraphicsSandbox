@@ -53,6 +53,12 @@ qt_add_executable(sandbox
         Importer/AssimpImporter.h
         Common/AssetProvider.h
         Common/AssetProvider.cpp
+        Model/Components/DirectionalLightSourceComponent.h
+        UI/ObjectEditor/Components/DirectionalLightSourceComponentView/DirectionLightSourceComponentView.cpp
+        UI/ObjectEditor/Components/DirectionalLightSourceComponentView/DirectionLightSourceComponentView.h
+        UI/ObjectEditor/Components/DirectionalLightSourceComponentView/DirectionLightSourceComponentView.ui
+        Model/Components/ShadowType.h
+        Model/Components/ShadowType.cpp
 )
 
 target_link_libraries(sandbox
